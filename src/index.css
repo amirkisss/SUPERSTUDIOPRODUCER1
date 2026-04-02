@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Assistant", "Heebo", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-hebrew: "Assistant", "Heebo", "Inter", sans-serif;
+  
+  --color-studio-bg: #121212;
+  --color-studio-card: #1e1e1e;
+  --color-studio-accent: #f27d26;
+  --color-studio-text: #e0e0e0;
+  --color-studio-muted: #888888;
+  --color-studio-border: #333333;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-studio-bg);
+    color: var(--color-studio-text);
+    font-family: var(--font-sans);
+  }
+}
+
+.font-hebrew {
+  font-family: var(--font-hebrew);
+}
+
+.studio-glass {
+  background: rgba(30, 30, 30, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-studio-border);
+}
+
+.nikud-text {
+  font-family: "SBL Hebrew", "Times New Roman", serif;
+  font-size: 1.25rem;
+  line-height: 2;
+}
