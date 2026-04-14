@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Music, PenTool, Layout, Guitar, Settings, Trash2, PlusCircle, Info, Download, FileText, FileCode, File as FileIcon, LogIn, LogOut, Users, Loader2, Shield, User as UserIcon, Plus, Minus, RotateCcw } from 'lucide-react';
+import { Music, PenTool, Layout, Guitar, Settings, Trash2, PlusCircle, Info, Download, FileText, FileCode, File as FileIcon, LogIn, LogOut, Users, Loader2, Shield, User as UserIcon, Plus, Minus, RotateCcw, Zap } from 'lucide-react';
 import LyricsEditor from './components/LyricsEditor';
 import ArrangementPanel from './components/ArrangementPanel';
 import CompositionPanel from './components/CompositionPanel';
@@ -510,14 +510,27 @@ export default function App() {
           )}
 
           {user ? (
-            <div className="flex items-center gap-3">
-              <div className="flex flex-col items-end">
-                <span className="text-xs font-bold">{user.displayName}</span>
-                <button onClick={logout} className="text-[10px] text-studio-muted hover:text-red-500 flex items-center gap-1">
-                  <LogOut size={10} /> {t('btn.logout') || 'Logout'}
-                </button>
+            <div className="flex items-center gap-4">
+              {userProfile && (
+                <div className="hidden sm:flex items-center gap-2 bg-studio-accent/10 border border-studio-accent/20 px-3 py-1.5 rounded-full">
+                  <Zap size={12} className="text-studio-accent fill-studio-accent" />
+                  <div className="flex flex-col leading-none">
+                    <span className="text-[10px] uppercase text-studio-muted font-bold tracking-wider">Credits</span>
+                    <span className="text-xs font-mono font-bold">
+                      {userProfile.usageLimit >= 999999 ? '∞' : `${userProfile.usageLimit - userProfile.usageCount} / ${userProfile.usageLimit}`}
+                    </span>
+                  </div>
+                </div>
+              )}
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col items-end">
+                  <span className="text-xs font-bold">{user.displayName}</span>
+                  <button onClick={logout} className="text-[10px] text-studio-muted hover:text-red-500 flex items-center gap-1">
+                    <LogOut size={10} /> {t('btn.logout') || 'Logout'}
+                  </button>
+                </div>
+                <img src={user.photoURL || ''} alt="User" className="w-8 h-8 rounded-full border border-studio-border" referrerPolicy="no-referrer" />
               </div>
-              <img src={user.photoURL || ''} alt="User" className="w-8 h-8 rounded-full border border-studio-border" referrerPolicy="no-referrer" />
             </div>
           ) : (
             <button 
