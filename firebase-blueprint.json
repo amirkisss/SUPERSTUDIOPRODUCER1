@@ -1,0 +1,50 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Application user profile",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique user ID" },
+        "displayName": { "type": "string", "description": "User's display name" },
+        "email": { "type": "string", "description": "User's email address" },
+        "photoURL": { "type": "string", "description": "User's profile picture URL" },
+        "lastSeen": { "type": "string", "format": "date-time", "description": "Last activity timestamp" },
+        "isOnline": { "type": "boolean", "description": "Whether the user is currently online" },
+        "role": { "type": "string", "enum": ["admin", "user"], "description": "User role" },
+        "usageLimit": { "type": "number", "description": "Total allowed AI actions" },
+        "usageCount": { "type": "number", "description": "Current AI actions used" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "User music project",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "lyrics": { "type": "string" },
+        "topic": { "type": "string" },
+        "language": { "type": "string" },
+        "arrangementResult": { "type": "string" },
+        "compositionResult": { "type": "string" },
+        "arrangementIdea": { "type": "string" },
+        "compositionIdea": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Collection of user profiles"
+    },
+    "/projects/{projectId}": {
+      "schema": "Project",
+      "description": "Collection of user projects"
+    }
+  }
+}

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { generateArrangement } from '../services/gemini';
-import { Music, Radio, Speaker, Loader2, Copy, Check, Mic, Disc, PenTool, Plus, Trash2, UserPlus, Waves, Globe } from 'lucide-react';
+import { Music, Radio, Speaker, Loader2, Copy, Check, Mic, Disc, PenTool, Plus, Trash2, UserPlus, Waves, Globe, Layout } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -23,6 +23,10 @@ interface ArrangementPanelProps {
   setArrangementResult: (r: string) => void;
   arrangementIdea: string;
   setArrangementIdea: (i: string) => void;
+  usageCount: number;
+  usageLimit: number;
+  isAdmin: boolean;
+  onAction: () => void;
 }
 
 const COUNTRIES = [
@@ -114,7 +118,7 @@ const INSTRUMENTS = [
 ];
 
 const VOCAL_STYLES = [
-  "Clean Male", "Clean Female", "Husky", "Operatic", "Soulful", "Rapped", "Whispered", "Auto-tuned", "Traditional Folk", "Middle Eastern Melisma", "Gravely", "High Pitch"
+  "Clean Male", "Clean Female", "Children's Voice", "Children's A Cappella", "Husky", "Operatic", "Soulful", "Rapped", "Whispered", "Auto-tuned", "Traditional Folk", "Middle Eastern Melisma", "Gravely", "High Pitch"
 ];
 
 const VOCAL_EFFECTS = [
@@ -125,7 +129,17 @@ const RECORDING_QUALITIES = [
   "Digital Studio", "Analog Tape", "Lo-fi Vinyl", "Stereo Wide", "Dolby Atmos", "Live Concert", "Binaural 3D", "Vintage 60s", "Modern Radio"
 ];
 
-export default function ArrangementPanel({ lyrics, arrangementResult, setArrangementResult, arrangementIdea, setArrangementIdea }: ArrangementPanelProps) {
+export default function ArrangementPanel({ 
+  lyrics, 
+  arrangementResult, 
+  setArrangementResult, 
+  arrangementIdea, 
+  setArrangementIdea,
+  usageCount,
+  usageLimit,
+  isAdmin,
+  onAction
+}: ArrangementPanelProps) {
   const { t } = useLanguage();
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [selectedInstruments, setSelectedInstruments] = useState<string[]>([]);
@@ -138,8 +152,33 @@ export default function ArrangementPanel({ lyrics, arrangementResult, setArrange
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resultHeight, setResultHeight] = useState(400);
+  const [isMaximized, setIsMaximized] = useState(false);
+  const isResizing = useRef<boolean>(false);
+
+  const startResizing = (e: React.MouseEvent) => {
+    isResizing.current = true;
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', stopResizing);
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isResizing.current) return;
+    const newHeight = Math.max(200, Math.min(1200, e.clientY - 400));
+    setResultHeight(newHeight);
+  };
+
+  const stopResizing = () => {
+    isResizing.current = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', stopResizing);
+  };
 
   const handleGenerate = async () => {
+    if (!isAdmin && usageCount >= usageLimit) {
+      setError("Usage limit reached. Please contact admin for more credits.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -155,7 +194,10 @@ export default function ArrangementPanel({ lyrics, arrangementResult, setArrange
         backingVocals.map(({ gender, style }) => ({ gender, style })),
         selectedCountries
       );
-      if (res) setArrangementResult(res);
+      if (res) {
+        setArrangementResult(res);
+        onAction();
+      }
     } catch (err) {
       console.error(err);
       setError("Failed to generate arrangement. Please try again.");
@@ -235,7 +277,7 @@ export default function ArrangementPanel({ lyrics, arrangementResult, setArrange
           value={arrangementIdea}
           onChange={(e) => setArrangementIdea(e.target.value)}
           placeholder={t('arrangement.idea.placeholder')}
-          className="bg-studio-card border border-studio-border rounded-xl p-4 focus:outline-none focus:border-studio-accent transition-colors h-24 resize-none text-sm"
+          className="bg-studio-card border border-studio-border rounded-xl p-4 focus:outline-none focus:border-studio-accent transition-colors h-24 resize-y min-h-[6rem] text-sm"
         />
       </div>
 
@@ -501,8 +543,30 @@ export default function ArrangementPanel({ lyrics, arrangementResult, setArrange
       </button>
       {error && <p className="text-xs text-red-500 text-center font-mono">{error}</p>}
 
-      <div className="bg-studio-card border border-studio-border rounded-xl p-6 relative">
-        <label className="text-xs uppercase tracking-widest text-studio-muted font-mono mb-4 block">{t('arrangement.result.label')}</label>
+      <div 
+        className={`bg-studio-card border border-studio-border rounded-xl p-6 relative overflow-y-auto ${isMaximized ? 'fixed inset-4 z-[100] h-auto shadow-2xl ring-1 ring-studio-accent/20' : ''}`}
+        style={isMaximized ? {} : { height: `${resultHeight}px` }}
+      >
+        {isMaximized && (
+          <button 
+            onClick={() => setIsMaximized(false)}
+            className="absolute top-4 right-4 p-2 bg-studio-border hover:bg-red-500 rounded-full transition-all z-[110]"
+            title="Close"
+          >
+            <Trash2 size={20} className="rotate-45" />
+          </button>
+        )}
+        <div className="flex justify-between items-center mb-4">
+          <label className="text-xs uppercase tracking-widest text-studio-muted font-mono block">{t('arrangement.result.label')}</label>
+          <button 
+            onClick={() => setIsMaximized(!isMaximized)}
+            className="bg-studio-border hover:bg-studio-accent hover:text-black p-1.5 rounded-lg transition-all flex items-center gap-2 text-[10px]"
+            title={isMaximized ? "Minimize" : "Maximize"}
+          >
+            <Layout size={12} />
+            {isMaximized ? "Minimize" : "Maximize"}
+          </button>
+        </div>
         {!arrangementResult && !loading && (
           <div className="h-40 flex flex-col items-center justify-center text-studio-muted text-center p-8">
             <Music size={48} className="mb-4 opacity-20" />
@@ -522,6 +586,14 @@ export default function ArrangementPanel({ lyrics, arrangementResult, setArrange
               </button>
             </div>
             <ReactMarkdown>{arrangementResult}</ReactMarkdown>
+          </div>
+        )}
+        {!isMaximized && (
+          <div 
+            className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize hover:bg-studio-accent transition-colors z-10 group"
+            onMouseDown={startResizing}
+          >
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-studio-border group-hover:bg-studio-accent/50 transition-colors" />
           </div>
         )}
       </div>

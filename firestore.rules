@@ -1,0 +1,98 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - uid: string (required) - Unique user ID
+    //   - displayName: string (optional) - User's display name
+    //   - email: string (required) - User's email address
+    //   - photoURL: string (optional) - User's profile picture URL
+    //   - lastSeen: string (optional) - Last activity timestamp (ISO 8601)
+    //   - isOnline: bool (optional) - Online status
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' || 
+         request.auth.token.email == "amirkiss1983@gmail.com");
+    }
+    
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$") &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() < 100)) &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() < 500)) &&
+             (!('isOnline' in data) || (data.isOnline is bool)) &&
+             (!('lastSeen' in data) || (data.lastSeen is string)) &&
+             (!('role' in data) || (data.role in ['admin', 'user'])) &&
+             (!('usageLimit' in data) || (data.usageLimit is number)) &&
+             (!('usageCount' in data) || (data.usageCount is number));
+    }
+
+    function isValidProject(data) {
+      return data.keys().hasAll(['userId', 'updatedAt']) &&
+             data.userId == request.auth.uid &&
+             data.updatedAt is string &&
+             (!('title' in data) || (data.title is string && data.title.size() < 200)) &&
+             (!('lyrics' in data) || (data.lyrics is string && data.lyrics.size() < 50000)) &&
+             (!('arrangementResult' in data) || (data.arrangementResult is string && data.arrangementResult.size() < 10000));
+    }
+
+    match /users/{userId} {
+      // Only admin can list all users (to see who is online)
+      allow list: if isAdmin();
+      
+      // Users can read their own profile
+      allow get: if isAuthenticated();
+      
+      allow create: if isOwner(userId) && 
+                    isValidUser(request.resource.data) && 
+                    request.resource.data.role == 'user' &&
+                    request.resource.data.usageLimit == 5 &&
+                    request.resource.data.usageCount == 0;
+      
+      allow update: if (isOwner(userId) && 
+                        isValidUser(request.resource.data) &&
+                        request.resource.data.uid == resource.data.uid &&
+                        request.resource.data.email == resource.data.email &&
+                        request.resource.data.role == resource.data.role &&
+                        request.resource.data.usageLimit == resource.data.usageLimit &&
+                        // Allow user to increment usageCount if within limit
+                        (request.resource.data.usageCount == resource.data.usageCount || 
+                         (request.resource.data.usageCount == resource.data.usageCount + 1 && 
+                          request.resource.data.usageCount <= resource.data.usageLimit))) ||
+                    (isAdmin() && isValidUser(request.resource.data));
+    }
+
+    match /projects/{projectId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && isValidProject(request.resource.data);
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid && isValidProject(request.resource.data);
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}

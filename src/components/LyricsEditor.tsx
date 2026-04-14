@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { generateLyrics, processWord, refineLyrics, vocalizeLyrics } from '../services/gemini';
-import { Sparkles, Type as TypeIcon, Languages, ChevronDown, Loader2, Replace, SpellCheck, Copy, Check, Wand2, Trash2, Plus, User, UserCheck } from 'lucide-react';
+import { Sparkles, Type as TypeIcon, Languages, ChevronDown, Loader2, Replace, SpellCheck, Copy, Check, Wand2, Trash2, Plus, User, UserCheck, Info, Layout } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -11,9 +11,24 @@ interface LyricsEditorProps {
   setTopic: (t: string) => void;
   language: string;
   setLanguage: (l: string) => void;
+  usageCount: number;
+  usageLimit: number;
+  isAdmin: boolean;
+  onAction: () => void;
 }
 
-export default function LyricsEditor({ lyrics, setLyrics, topic, setTopic, language, setLanguage }: LyricsEditorProps) {
+export default function LyricsEditor({ 
+  lyrics, 
+  setLyrics, 
+  topic, 
+  setTopic, 
+  language, 
+  setLanguage,
+  usageCount,
+  usageLimit,
+  isAdmin,
+  onAction
+}: LyricsEditorProps) {
   const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [refining, setRefining] = useState(false);
@@ -27,14 +42,43 @@ export default function LyricsEditor({ lyrics, setLyrics, topic, setTopic, langu
   const [newWordInput, setNewWordInput] = useState('');
   const [manualWordInput, setManualWordInput] = useState('');
   const [showAddInput, setShowAddInput] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editorHeight, setEditorHeight] = useState(400);
+  const [isMaximized, setIsMaximized] = useState(false);
+  const isResizing = useRef(false);
+
+  const startResizing = (e: React.MouseEvent) => {
+    isResizing.current = true;
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', stopResizing);
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isResizing.current) return;
+    const newHeight = Math.max(200, Math.min(1200, e.clientY - 300)); // Adjust based on layout
+    setEditorHeight(newHeight);
+  };
+
+  const stopResizing = () => {
+    isResizing.current = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', stopResizing);
+  };
 
   const handleGenerate = async () => {
     if (!topic) return;
+    if (!isAdmin && usageCount >= usageLimit) {
+      setError("Usage limit reached. Please contact admin for more credits.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
       const result = await generateLyrics(topic, language, lyrics, gender);
-      if (result) setLyrics(result);
+      if (result) {
+        setLyrics(result);
+        onAction();
+      }
     } catch (err) {
       console.error(err);
       setError("Failed to generate lyrics. Please try again.");
@@ -45,11 +89,18 @@ export default function LyricsEditor({ lyrics, setLyrics, topic, setTopic, langu
 
   const handleVocalize = async () => {
     if (!lyrics) return;
+    if (!isAdmin && usageCount >= usageLimit) {
+      setError("Usage limit reached. Please contact admin for more credits.");
+      return;
+    }
     setVocalizing(true);
     setError(null);
     try {
       const result = await vocalizeLyrics(lyrics, gender);
-      if (result) setLyrics(result);
+      if (result) {
+        setLyrics(result);
+        onAction();
+      }
     } catch (err) {
       console.error(err);
       setError("Failed to vocalize lyrics. Please try again.");
@@ -60,11 +111,18 @@ export default function LyricsEditor({ lyrics, setLyrics, topic, setTopic, langu
 
   const handleRefine = async () => {
     if (!lyrics) return;
+    if (!isAdmin && usageCount >= usageLimit) {
+      setError("Usage limit reached. Please contact admin for more credits.");
+      return;
+    }
     setRefining(true);
     setError(null);
     try {
       const result = await refineLyrics(lyrics, language, topic, gender);
-      if (result) setLyrics(result);
+      if (result) {
+        setLyrics(result);
+        onAction();
+      }
     } catch (err) {
       console.error(err);
       setError("Failed to refine lyrics. Please try again.");
@@ -92,7 +150,7 @@ export default function LyricsEditor({ lyrics, setLyrics, topic, setTopic, langu
     setNewWordInput('');
   };
 
-  const getSuggestions = async (action: 'replace' | 'nikud') => {
+  const getSuggestions = async (action: 'replace' | 'nikud' | 'nikud_options') => {
     if (!selectedWord) return;
     setSuggestionLoading(true);
     try {
@@ -155,12 +213,31 @@ export default function LyricsEditor({ lyrics, setLyrics, topic, setTopic, langu
     <div className="flex flex-col h-full gap-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="md:col-span-2 flex flex-col gap-2">
-          <label className="text-xs uppercase tracking-widest text-studio-muted font-mono">{t('lyrics.topic.label')}</label>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <label className="text-xs uppercase tracking-widest text-studio-muted font-mono">{t('lyrics.topic.label')}</label>
+              <div className="group relative">
+                <Info size={12} className="text-studio-muted cursor-help" />
+                <div className="absolute bottom-full left-0 mb-2 w-48 p-2 bg-studio-card border border-studio-border rounded text-[10px] text-studio-muted hidden group-hover:block z-50 shadow-2xl">
+                  {t('lyrics.mode.info')}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                className={`flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${isEditing ? 'bg-studio-accent text-black' : 'bg-studio-border text-studio-muted hover:text-white'}`}
+              >
+                {isEditing ? <Check size={12} /> : <TypeIcon size={12} />}
+                {isEditing ? t('lyrics.mode.done') || 'Finish Editing' : t('lyrics.mode.edit') || 'Manual Writing'}
+              </button>
+            </div>
+          </div>
           <textarea
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             placeholder={t('lyrics.topic.placeholder')}
-            className="bg-studio-card border border-studio-border rounded-lg p-3 focus:outline-none focus:border-studio-accent transition-colors h-24 resize-none"
+            className="bg-studio-card border border-studio-border rounded-lg p-3 focus:outline-none focus:border-studio-accent transition-colors h-24 resize-y min-h-[6rem]"
           />
         </div>
         <div className="flex flex-col gap-2">
@@ -178,6 +255,12 @@ export default function LyricsEditor({ lyrics, setLyrics, topic, setTopic, langu
             <option>Russian</option>
             <option>Georgian</option>
             <option>Armenian</option>
+            <option>Swahili</option>
+            <option>Amharic</option>
+            <option>Yoruba</option>
+            <option>Zulu</option>
+            <option>Hausa</option>
+            <option>Igbo</option>
           </select>
           <div className="flex flex-col gap-2 mt-auto">
             {language === 'Hebrew' && (
@@ -233,29 +316,75 @@ export default function LyricsEditor({ lyrics, setLyrics, topic, setTopic, langu
       <div className="flex-1 flex flex-col gap-2 min-h-0">
         <div className="flex justify-between items-center">
           <label className="text-xs uppercase tracking-widest text-studio-muted font-mono">{t('lyrics.editor.label')}</label>
-          <button 
-            onClick={copyToClipboard}
-            className="bg-studio-border hover:bg-studio-accent hover:text-black p-1.5 rounded-lg transition-all flex items-center gap-2 text-[10px]"
-          >
-            {copied ? <Check size={12} /> : <Copy size={12} />}
-            {copied ? t('lyrics.copied') : t('lyrics.copy')}
-          </button>
-        </div>
-        <div className="flex-1 bg-studio-card border border-studio-border rounded-lg p-6 overflow-y-auto relative">
-          <div className="whitespace-pre-wrap leading-relaxed nikud-text">
-            {lyrics.split(/(\s+)/).map((part, i) => {
-              if (part.trim() === "") return part;
-              return (
-                <span
-                  key={i}
-                  onClick={(e) => handleWordClick(e, part, i)}
-                  className={`cursor-pointer hover:bg-studio-accent hover:text-black rounded px-0.5 transition-colors ${selectedWord?.index === i ? 'bg-studio-accent text-black' : ''}`}
-                >
-                  {part}
-                </span>
-              );
-            })}
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setIsMaximized(!isMaximized)}
+              className="bg-studio-border hover:bg-studio-accent hover:text-black p-1.5 rounded-lg transition-all flex items-center gap-2 text-[10px]"
+              title={isMaximized ? "Minimize" : "Maximize"}
+            >
+              <Layout size={12} />
+              {isMaximized ? "Minimize" : "Maximize"}
+            </button>
+            <button 
+              onClick={copyToClipboard}
+              className="bg-studio-border hover:bg-studio-accent hover:text-black p-1.5 rounded-lg transition-all flex items-center gap-2 text-[10px]"
+            >
+              {copied ? <Check size={12} /> : <Copy size={12} />}
+              {copied ? t('lyrics.copied') : t('lyrics.copy')}
+            </button>
           </div>
+        </div>
+        <div 
+          className={`flex-1 bg-studio-card border border-studio-border rounded-lg p-6 overflow-y-auto relative ${isMaximized ? 'fixed inset-4 z-[100] h-auto shadow-2xl ring-1 ring-studio-accent/20' : ''}`}
+          style={isMaximized ? {} : { height: `${editorHeight}px` }}
+        >
+          {isMaximized && (
+            <button 
+              onClick={() => setIsMaximized(false)}
+              className="absolute top-4 right-4 p-2 bg-studio-border hover:bg-red-500 rounded-full transition-all z-[110]"
+              title="Close"
+            >
+              <Trash2 size={20} className="rotate-45" />
+            </button>
+          )}
+          {isEditing ? (
+            <div className="h-full flex flex-col gap-4">
+              <textarea
+                value={lyrics}
+                onChange={(e) => setLyrics(e.target.value)}
+                placeholder={t('lyrics.editor.placeholder') || 'Write or paste your lyrics here...'}
+                className="w-full flex-1 bg-transparent border-none focus:outline-none resize-y min-h-[200px] leading-relaxed nikud-text text-lg"
+                dir={language === 'Hebrew' || language === 'Arabic' ? 'rtl' : 'ltr'}
+              />
+              {language === 'Hebrew' && (
+                <div className="flex justify-end border-t border-studio-border pt-4">
+                  <button
+                    onClick={handleVocalize}
+                    disabled={vocalizing || !lyrics}
+                    className="bg-studio-accent text-black font-bold px-6 py-2 rounded-xl flex items-center gap-2 hover:scale-105 transition-all shadow-lg shadow-studio-accent/20 disabled:opacity-50"
+                  >
+                    {vocalizing ? <Loader2 className="animate-spin" size={16} /> : <SpellCheck size={16} />}
+                    {vocalizing ? t('lyrics.btn.vocalizing') : t('lyrics.btn.vocalize')}
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="whitespace-pre-wrap leading-relaxed nikud-text text-lg" dir={language === 'Hebrew' || language === 'Arabic' ? 'rtl' : 'ltr'}>
+              {lyrics.split(/(\s+)/).map((part, i) => {
+                if (part.trim() === "") return part;
+                return (
+                  <span
+                    key={i}
+                    onClick={(e) => handleWordClick(e, part, i)}
+                    className={`cursor-pointer hover:bg-studio-accent hover:text-black rounded px-0.5 transition-colors ${selectedWord?.index === i ? 'bg-studio-accent text-black' : ''}`}
+                  >
+                    {part}
+                  </span>
+                );
+              })}
+            </div>
+          )}
 
           {selectedWord && popupPosition && (
             <div 
@@ -296,6 +425,12 @@ export default function LyricsEditor({ lyrics, setLyrics, topic, setTopic, langu
                   className="flex items-center gap-2 text-sm bg-studio-border hover:bg-studio-accent hover:text-black p-2 rounded transition-colors"
                 >
                   <SpellCheck size={14} /> {t('lyrics.word.nikud')}
+                </button>
+                <button
+                  onClick={() => getSuggestions('nikud_options')}
+                  className="flex items-center gap-2 text-sm bg-studio-border hover:bg-studio-accent hover:text-black p-2 rounded transition-colors"
+                >
+                  <Languages size={14} /> {t('lyrics.word.nikud_options')}
                 </button>
                 
                 <div className="h-px bg-studio-border my-1" />
@@ -352,6 +487,14 @@ export default function LyricsEditor({ lyrics, setLyrics, topic, setTopic, langu
             </div>
           )}
         </div>
+        {!isMaximized && (
+          <div 
+            className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize hover:bg-studio-accent transition-colors z-10 group"
+            onMouseDown={startResizing}
+          >
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-studio-border group-hover:bg-studio-accent/50 transition-colors" />
+          </div>
+        )}
       </div>
     </div>
   );

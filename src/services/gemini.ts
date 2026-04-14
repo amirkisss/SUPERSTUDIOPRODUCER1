@@ -59,12 +59,13 @@ export async function refineLyrics(lyrics: string, language: string, instruction
   }
 }
 
-export async function processWord(word: string, action: 'replace' | 'nikud', context: string) {
+export async function processWord(word: string, action: 'replace' | 'nikud' | 'nikud_options', context: string) {
   try {
     const systemInstruction = `You are a linguistic expert. 
     Action: ${action}.
     If 'replace': suggest 5 high-quality synonyms or alternatives for the word "${word}" that fit the context: "${context}".
-    If 'nikud': provide the word "${word}" with correct Hebrew Nikud (vocalization). If it's not Hebrew, explain why.
+    If 'nikud': provide the word "${word}" with correct Hebrew Nikud (vocalization).
+    If 'nikud_options': provide ALL valid Hebrew vocalization possibilities for the word "${word}" (e.g., different tenses, meanings, or grammatical forms like Kamatz vs Patach if applicable).
     Output in JSON format.`;
 
     const response = await ai.models.generateContent({
@@ -119,31 +120,36 @@ export async function generateArrangement(
     9. Recording qualities/formats: ${recording.join(", ")}.
     10. How to blend the styles effectively.
     ${manualIdea ? `11. Incorporate and expand upon these specific user ideas: ${manualIdea}` : ""}
-    CRITICAL: The entire response MUST NOT exceed 1000 characters. This is a hard limit. Be extremely concise.`;
+    CRITICAL: The entire response MUST BE UNDER 1000 CHARACTERS. This is a strict technical limit. Use short sentences and bullet points. Do not exceed 1000 characters under any circumstances.`;
 
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: `Lyrics: ${lyrics ? lyrics.slice(0, 2000) : "No lyrics provided (Instrumental or generic plan)"}\nStyles: ${styles.join(", ")}\nInstruments: ${instruments.join(", ")}\nVocals: ${vocals.join(", ")}\nRecording: ${recording.join(", ")}${manualIdea ? `\nUser Ideas: ${manualIdea}` : ""}\nCountry Influences: ${countryInfluences.join(", ")}`,
+      contents: `Lyrics: ${lyrics ? lyrics.slice(0, 1500) : "No lyrics provided"}\nStyles: ${styles.join(", ")}\nInstruments: ${instruments.join(", ")}\nVocals: ${vocals.join(", ")}\nRecording: ${recording.join(", ")}${manualIdea ? `\nUser Ideas: ${manualIdea}` : ""}\nCountry Influences: ${countryInfluences.join(", ")}`,
       config: {
         systemInstruction,
       },
     });
 
     const text = response.text || "Failed to generate arrangement.";
-    return text.length > 1000 ? text.slice(0, 1000) + "..." : text;
+    // Strict enforcement
+    if (text.length > 950) {
+      return text.substring(0, 950) + "... [Limit Reached]";
+    }
+    return text;
   } catch (error) {
     console.error("Gemini Error (Arrangement):", error);
     throw error;
   }
 }
 
-export async function vocalizeLyrics(lyrics: string, gender: 'male' | 'female') {
+export async function vocalizeLyrics(lyrics: string, gender: 'male' | 'female', manualInstructions?: string) {
   try {
     const systemInstruction = `You are a Hebrew linguistic expert specializing in Nikud (vocalization).
     Your task is to add full and accurate Nikud to the provided Hebrew lyrics.
     CRITICAL: The Nikud and grammar MUST be appropriate for a ${gender} singer.
-    Ensure all words are correctly vocalized according to formal Hebrew rules.
+    Ensure all words are correctly vocalized according to formal Hebrew rules (Standard Hebrew).
     Keep the structure and sections (e.g., [בית 1]) exactly as they are.
+    ${manualInstructions ? `Specific user instruction for Nikud: ${manualInstructions}` : ""}
     Output ONLY the vocalized lyrics.`;
 
     const response = await ai.models.generateContent({
