@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Music, PenTool, Layout, Guitar, Settings, Trash2, PlusCircle, Info, Download, FileText, FileCode, File as FileIcon, LogIn, LogOut, Users, Loader2, Shield, User as UserIcon, Plus, Minus } from 'lucide-react';
+import { Music, PenTool, Layout, Guitar, Settings, Trash2, PlusCircle, Info, Download, FileText, FileCode, File as FileIcon, LogIn, LogOut, Users, Loader2, Shield, User as UserIcon, Plus, Minus, RotateCcw } from 'lucide-react';
 import LyricsEditor from './components/LyricsEditor';
 import ArrangementPanel from './components/ArrangementPanel';
 import CompositionPanel from './components/CompositionPanel';
@@ -13,6 +13,19 @@ import { collection, query, where, onSnapshot, addDoc, serverTimestamp, deleteDo
 
 type Tab = 'lyrics' | 'arrangement' | 'composition';
 
+interface Musician {
+  id: string;
+  instrument: string;
+  type: string;
+  model: string;
+}
+
+interface BackingVocal {
+  id: string;
+  gender: string;
+  style: string;
+}
+
 interface Project {
   id: string;
   title: string;
@@ -23,6 +36,15 @@ interface Project {
   compositionResult: string;
   arrangementIdea: string;
   compositionIdea: string;
+  // New persistent fields
+  selectedGenres?: string[];
+  selectedInstruments?: string[];
+  selectedVocals?: string[];
+  selectedEffects?: string[];
+  selectedRecordings?: string[];
+  selectedCountries?: string[];
+  musicians?: Musician[];
+  backingVocals?: BackingVocal[];
   updatedAt: any;
 }
 
@@ -48,6 +70,14 @@ export default function App() {
   const [compositionResult, setCompositionResult] = useState('');
   const [arrangementIdea, setArrangementIdea] = useState('');
   const [compositionIdea, setCompositionIdea] = useState('');
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [selectedInstruments, setSelectedInstruments] = useState<string[]>([]);
+  const [selectedVocals, setSelectedVocals] = useState<string[]>([]);
+  const [selectedEffects, setSelectedEffects] = useState<string[]>([]);
+  const [selectedRecordings, setSelectedRecordings] = useState<string[]>([]);
+  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
+  const [musicians, setMusicians] = useState<Musician[]>([]);
+  const [backingVocals, setBackingVocals] = useState<BackingVocal[]>([]);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showNewProjectConfirm, setShowNewProjectConfirm] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -157,6 +187,14 @@ export default function App() {
         compositionResult,
         arrangementIdea,
         compositionIdea,
+        selectedGenres,
+        selectedInstruments,
+        selectedVocals,
+        selectedEffects,
+        selectedRecordings,
+        selectedCountries,
+        musicians,
+        backingVocals,
         updatedAt: new Date().toISOString()
       };
 
@@ -184,6 +222,14 @@ export default function App() {
     setCompositionResult(project.compositionResult || '');
     setArrangementIdea(project.arrangementIdea || '');
     setCompositionIdea(project.compositionIdea || '');
+    setSelectedGenres(project.selectedGenres || []);
+    setSelectedInstruments(project.selectedInstruments || []);
+    setSelectedVocals(project.selectedVocals || []);
+    setSelectedEffects(project.selectedEffects || []);
+    setSelectedRecordings(project.selectedRecordings || []);
+    setSelectedCountries(project.selectedCountries || []);
+    setMusicians(project.musicians || []);
+    setBackingVocals(project.backingVocals || []);
     setShowHistory(false);
     setActiveTab('lyrics');
   };
@@ -235,6 +281,31 @@ export default function App() {
     }
   };
 
+  const resetUserUsage = async (userId: string, displayName: string) => {
+    if (!confirm(`Reset usage for ${displayName}?`)) return;
+    try {
+      await updateDoc(doc(db, 'users', userId), { usageCount: 0 });
+      alert(`Usage reset for ${displayName}`);
+    } catch (error) {
+      console.error("Error resetting usage:", error);
+      alert("Failed to reset usage. Please check console for details.");
+    }
+  };
+
+  const resetAllUsage = async () => {
+    if (!confirm('Are you sure you want to reset usage for ALL users?')) return;
+    try {
+      const batch = allUsers.filter(u => u.role !== 'admin');
+      for (const u of batch) {
+        await updateDoc(doc(db, 'users', u.uid), { usageCount: 0 });
+      }
+      alert("All user usage counts have been reset to 0.");
+    } catch (error) {
+      console.error("Error resetting all usage:", error);
+      alert("Failed to reset all usage. Some users may not have been updated.");
+    }
+  };
+
   const tabs = [
     { id: 'lyrics', label: t('tab.lyrics'), icon: PenTool },
     { id: 'arrangement', label: t('tab.arrangement'), icon: Layout },
@@ -249,6 +320,14 @@ export default function App() {
     setCompositionResult('');
     setArrangementIdea('');
     setCompositionIdea('');
+    setSelectedGenres([]);
+    setSelectedInstruments([]);
+    setSelectedVocals([]);
+    setSelectedEffects([]);
+    setSelectedRecordings([]);
+    setSelectedCountries([]);
+    setMusicians([]);
+    setBackingVocals([]);
     setActiveTab('lyrics');
     setCurrentProjectId(null);
     setProjectTitleInput('');
@@ -506,7 +585,16 @@ export default function App() {
                     <Shield className="text-studio-accent" />
                     User Management Control
                   </h2>
-                  <button onClick={() => setShowAdminPanel(false)} className="text-studio-muted hover:text-white text-2xl">×</button>
+                  <div className="flex items-center gap-4">
+                    <button 
+                      onClick={resetAllUsage}
+                      className="flex items-center gap-2 text-xs bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white px-4 py-2 rounded-lg transition-all font-bold"
+                    >
+                      <RotateCcw size={14} />
+                      Reset All Usage
+                    </button>
+                    <button onClick={() => setShowAdminPanel(false)} className="text-studio-muted hover:text-white text-2xl">×</button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4">
@@ -524,28 +612,55 @@ export default function App() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-8">
-                        <div className="text-center">
+                      <div className="flex items-center gap-4">
+                        <div className="text-center mr-4">
                           <p className="text-[10px] uppercase text-studio-muted mb-1">Usage</p>
                           <p className="font-mono text-sm">{u.usageCount} / {u.usageLimit >= 999999 ? '∞' : u.usageLimit}</p>
                         </div>
 
                         {u.role !== 'admin' && (
-                          <div className="flex items-center gap-3 bg-studio-bg p-2 rounded-xl border border-studio-border">
+                          <div className="flex items-center gap-2 mr-4">
+                            <div className="flex items-center gap-1 bg-studio-bg p-1 rounded-lg border border-studio-border">
+                              <button 
+                                onClick={() => updateUserLimit(u.uid, Math.max(0, u.usageLimit - 5))}
+                                className="p-1 hover:text-studio-accent transition-colors"
+                              >
+                                <Minus size={14} />
+                              </button>
+                              <span className="text-xs font-bold min-w-[1.5rem] text-center">{u.usageLimit}</span>
+                              <button 
+                                onClick={() => updateUserLimit(u.uid, u.usageLimit + 5)}
+                                className="p-1 hover:text-studio-accent transition-colors"
+                              >
+                                <Plus size={14} />
+                              </button>
+                            </div>
                             <button 
-                              onClick={() => updateUserLimit(u.uid, Math.max(0, u.usageLimit - 5))}
-                              className="p-1 hover:text-studio-accent transition-colors"
+                              onClick={() => resetUserUsage(u.uid, u.displayName)}
+                              className="p-2 bg-studio-border hover:bg-studio-accent hover:text-black rounded-lg transition-all"
+                              title="Reset Usage"
                             >
-                              <Minus size={16} />
-                            </button>
-                            <span className="font-bold min-w-[2rem] text-center">{u.usageLimit}</span>
-                            <button 
-                              onClick={() => updateUserLimit(u.uid, u.usageLimit + 5)}
-                              className="p-1 hover:text-studio-accent transition-colors"
-                            >
-                              <Plus size={16} />
+                              <RotateCcw size={14} />
                             </button>
                           </div>
+                        )}
+
+                        {u.uid !== user.uid && (
+                          <button 
+                            onClick={async () => {
+                              if (confirm(`Are you sure you want to DELETE user ${u.displayName}? This cannot be undone.`)) {
+                                try {
+                                  await deleteDoc(doc(db, 'users', u.uid));
+                                } catch (err) {
+                                  console.error("Error deleting user:", err);
+                                }
+                              }
+                            }}
+                            className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all"
+                            title="Delete User"
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         )}
                       </div>
                     </div>
@@ -725,6 +840,22 @@ export default function App() {
                   usageLimit={userProfile?.usageLimit || 0}
                   isAdmin={userProfile?.role === 'admin'}
                   onAction={incrementUsage}
+                  selectedGenres={selectedGenres}
+                  setSelectedGenres={setSelectedGenres}
+                  selectedInstruments={selectedInstruments}
+                  setSelectedInstruments={setSelectedInstruments}
+                  selectedVocals={selectedVocals}
+                  setSelectedVocals={setSelectedVocals}
+                  selectedEffects={selectedEffects}
+                  setSelectedEffects={setSelectedEffects}
+                  selectedRecordings={selectedRecordings}
+                  setSelectedRecordings={setSelectedRecordings}
+                  selectedCountries={selectedCountries}
+                  setSelectedCountries={setSelectedCountries}
+                  musicians={musicians}
+                  setMusicians={setMusicians}
+                  backingVocals={backingVocals}
+                  setBackingVocals={setBackingVocals}
                 />
               )}
               {activeTab === 'composition' && (

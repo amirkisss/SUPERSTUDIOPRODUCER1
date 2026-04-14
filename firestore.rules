@@ -71,7 +71,8 @@ service cloud.firestore {
                     request.resource.data.usageLimit == 5 &&
                     request.resource.data.usageCount == 0;
       
-      allow update: if (isOwner(userId) && 
+      allow update: if isAdmin() || (
+                        isOwner(userId) && 
                         isValidUser(request.resource.data) &&
                         request.resource.data.uid == resource.data.uid &&
                         request.resource.data.email == resource.data.email &&
@@ -80,8 +81,8 @@ service cloud.firestore {
                         // Allow user to increment usageCount if within limit
                         (request.resource.data.usageCount == resource.data.usageCount || 
                          (request.resource.data.usageCount == resource.data.usageCount + 1 && 
-                          request.resource.data.usageCount <= resource.data.usageLimit))) ||
-                    (isAdmin() && isValidUser(request.resource.data));
+                          request.resource.data.usageCount <= resource.data.usageLimit))
+                      );
     }
 
     match /projects/{projectId} {

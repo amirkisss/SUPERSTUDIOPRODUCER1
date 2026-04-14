@@ -27,6 +27,23 @@ interface ArrangementPanelProps {
   usageLimit: number;
   isAdmin: boolean;
   onAction: () => void;
+  // Persistent parameters
+  selectedGenres: string[];
+  setSelectedGenres: (l: string[]) => void;
+  selectedInstruments: string[];
+  setSelectedInstruments: (l: string[]) => void;
+  selectedVocals: string[];
+  setSelectedVocals: (l: string[]) => void;
+  selectedEffects: string[];
+  setSelectedEffects: (l: string[]) => void;
+  selectedRecordings: string[];
+  setSelectedRecordings: (l: string[]) => void;
+  selectedCountries: string[];
+  setSelectedCountries: (l: string[]) => void;
+  musicians: Musician[];
+  setMusicians: (m: Musician[]) => void;
+  backingVocals: BackingVocal[];
+  setBackingVocals: (b: BackingVocal[]) => void;
 }
 
 const COUNTRIES = [
@@ -138,17 +155,25 @@ export default function ArrangementPanel({
   usageCount,
   usageLimit,
   isAdmin,
-  onAction
+  onAction,
+  selectedGenres,
+  setSelectedGenres,
+  selectedInstruments,
+  setSelectedInstruments,
+  selectedVocals,
+  setSelectedVocals,
+  selectedEffects,
+  setSelectedEffects,
+  selectedRecordings,
+  setSelectedRecordings,
+  selectedCountries,
+  setSelectedCountries,
+  musicians,
+  setMusicians,
+  backingVocals,
+  setBackingVocals
 }: ArrangementPanelProps) {
   const { t } = useLanguage();
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-  const [selectedInstruments, setSelectedInstruments] = useState<string[]>([]);
-  const [selectedVocals, setSelectedVocals] = useState<string[]>([]);
-  const [selectedEffects, setSelectedEffects] = useState<string[]>([]);
-  const [selectedRecordings, setSelectedRecordings] = useState<string[]>([]);
-  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
-  const [musicians, setMusicians] = useState<Musician[]>([]);
-  const [backingVocals, setBackingVocals] = useState<BackingVocal[]>([]);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
