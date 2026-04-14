@@ -4,6 +4,23 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export const MODEL_NAME = "gemini-3-flash-preview";
 
+async function callGeminiWithRetry(fn: () => Promise<any>, retries = 3, delay = 2000) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      const isRateLimit = error?.message?.includes('429') || error?.message?.toLowerCase().includes('rate limit') || error?.message?.toLowerCase().includes('quota');
+      if (isRateLimit && i < retries - 1) {
+        console.warn(`Gemini Rate Limit hit. Retrying in ${delay}ms... (Attempt ${i + 1}/${retries})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2; // Exponential backoff
+        continue;
+      }
+      throw error;
+    }
+  }
+}
+
 export async function generateLyrics(prompt: string, language: string, existingLyrics?: string, gender: 'male' | 'female' = 'male') {
   try {
     const systemInstruction = `You are a world-class songwriter. 
@@ -15,14 +32,14 @@ export async function generateLyrics(prompt: string, language: string, existingL
     In Hebrew, use: [בית 1], [פזמון], [בית 2], [גשר], [סיום].
     CRITICAL: Output ONLY the lyrics. Do not include any explanations, introductions, or extra text.`;
 
-    const response = await ai.models.generateContent({
+    const response = await callGeminiWithRetry(() => ai.models.generateContent({
       model: MODEL_NAME,
       contents: `CRITICAL: The lyrics MUST be written in ${language}.
       Topic/Idea: ${prompt}${existingLyrics ? `\nExisting lines to continue: ${existingLyrics}` : ""}`,
       config: {
         systemInstruction,
       },
-    });
+    }));
 
     return response.text || "Failed to generate lyrics. Please try again.";
   } catch (error) {
@@ -43,14 +60,14 @@ export async function refineLyrics(lyrics: string, language: string, instruction
     In Hebrew, use: [בית 1], [פזמון], [בית 2], [גשר], [סיום].
     CRITICAL: Output ONLY the refined lyrics. Do not include any explanations, introductions, or extra text.`;
 
-    const response = await ai.models.generateContent({
+    const response = await callGeminiWithRetry(() => ai.models.generateContent({
       model: MODEL_NAME,
       contents: `CRITICAL: The refined lyrics MUST be written in ${language}.
       Original Lyrics: ${lyrics}\nSpecific Instructions: ${instructions || "Improve the overall quality and flow."}`,
       config: {
         systemInstruction,
       },
-    });
+    }));
 
     return response.text || "Failed to refine lyrics. Please try again.";
   } catch (error) {
@@ -68,7 +85,7 @@ export async function processWord(word: string, action: 'replace' | 'nikud' | 'n
     If 'nikud_options': provide ALL valid Hebrew vocalization possibilities for the word "${word}" (e.g., different tenses, meanings, or grammatical forms like Kamatz vs Patach if applicable).
     Output in JSON format.`;
 
-    const response = await ai.models.generateContent({
+    const response = await callGeminiWithRetry(() => ai.models.generateContent({
       model: MODEL_NAME,
       contents: `Word: ${word}\nContext: ${context}`,
       config: {
@@ -85,7 +102,7 @@ export async function processWord(word: string, action: 'replace' | 'nikud' | 'n
           }
         }
       },
-    });
+    }));
 
     return JSON.parse(response.text || "{}");
   } catch (error) {
@@ -122,13 +139,13 @@ export async function generateArrangement(
     ${manualIdea ? `11. Incorporate and expand upon these specific user ideas: ${manualIdea}` : ""}
     CRITICAL: The entire response MUST BE UNDER 1000 CHARACTERS. This is a strict technical limit. Use short sentences and bullet points. Do not exceed 1000 characters under any circumstances.`;
 
-    const response = await ai.models.generateContent({
+    const response = await callGeminiWithRetry(() => ai.models.generateContent({
       model: MODEL_NAME,
       contents: `Lyrics: ${lyrics ? lyrics.slice(0, 1500) : "No lyrics provided"}\nStyles: ${styles.join(", ")}\nInstruments: ${instruments.join(", ")}\nVocals: ${vocals.join(", ")}\nRecording: ${recording.join(", ")}${manualIdea ? `\nUser Ideas: ${manualIdea}` : ""}\nCountry Influences: ${countryInfluences.join(", ")}`,
       config: {
         systemInstruction,
       },
-    });
+    }));
 
     const text = response.text || "Failed to generate arrangement.";
     // Strict enforcement
@@ -152,13 +169,13 @@ export async function vocalizeLyrics(lyrics: string, gender: 'male' | 'female', 
     ${manualInstructions ? `Specific user instruction for Nikud: ${manualInstructions}` : ""}
     Output ONLY the vocalized lyrics.`;
 
-    const response = await ai.models.generateContent({
+    const response = await callGeminiWithRetry(() => ai.models.generateContent({
       model: MODEL_NAME,
       contents: lyrics,
       config: {
         systemInstruction,
       },
-    });
+    }));
 
     return response.text || "Failed to vocalize lyrics.";
   } catch (error) {
@@ -177,13 +194,13 @@ export async function generateComposition(lyrics: string, mood: string, manualId
   4. Tips for the vocal performance.
   ${manualIdea ? `5. IMPORTANT: Incorporate and complete these specific chord/note ideas provided by the user: ${manualIdea}` : ""}`;
 
-  const response = await ai.models.generateContent({
+  const response = await callGeminiWithRetry(() => ai.models.generateContent({
     model: MODEL_NAME,
     contents: `Lyrics: ${lyrics || "No lyrics provided"}\nMood: ${mood}${manualIdea ? `\nUser's Musical Ideas: ${manualIdea}` : ""}`,
     config: {
       systemInstruction,
     },
-  });
+  }));
 
   return response.text;
 }

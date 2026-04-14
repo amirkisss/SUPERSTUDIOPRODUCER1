@@ -784,13 +784,19 @@ export default function App() {
 
             {userProfile && userProfile.role !== 'admin' && (
               <div className="bg-studio-card/30 rounded-xl p-4 border border-studio-border">
-                <p className="text-[10px] uppercase tracking-widest text-studio-muted mb-2 font-mono">Usage Limit</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <Zap size={12} className="text-studio-accent fill-studio-accent" />
+                  <p className="text-[10px] uppercase tracking-widest text-studio-muted font-mono">Credits Balance</p>
+                </div>
                 <div className="flex justify-between items-end">
-                  <span className="text-xl font-bold font-mono">{userProfile.usageCount}<span className="text-studio-muted text-xs font-normal">/{userProfile.usageLimit}</span></span>
+                  <span className="text-xl font-bold font-mono">
+                    {userProfile.usageLimit - userProfile.usageCount}
+                    <span className="text-studio-muted text-xs font-normal ml-1">remaining</span>
+                  </span>
                   <div className="w-24 h-1 bg-studio-border rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-studio-accent transition-all duration-500" 
-                      style={{ width: `${Math.min(100, (userProfile.usageCount / userProfile.usageLimit) * 100)}%` }}
+                      style={{ width: `${Math.max(0, Math.min(100, ((userProfile.usageLimit - userProfile.usageCount) / userProfile.usageLimit) * 100))}%` }}
                     ></div>
                   </div>
                 </div>
