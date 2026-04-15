@@ -137,7 +137,7 @@ const INSTRUMENTS = [
 ];
 
 const VOCAL_STYLES = [
-  "Clean Male", "Clean Female", "Children's Voice", "Children's A Cappella", "Husky", "Operatic", "Soulful", "Rapped", "Whispered", "Auto-tuned", "Traditional Folk", "Middle Eastern Melisma", "Gravely", "High Pitch"
+  "Clean Male", "Clean Female", "Duet", "Children's Voice", "Children's A Cappella", "Husky", "Operatic", "Soulful", "Rapped", "Whispered", "Auto-tuned", "Traditional Folk", "Middle Eastern Melisma", "Gravely", "High Pitch"
 ];
 
 const VOCAL_EFFECTS = [
@@ -145,7 +145,8 @@ const VOCAL_EFFECTS = [
 ];
 
 const RECORDING_QUALITIES = [
-  "Digital Studio", "Analog Tape", "Lo-fi Vinyl", "Stereo Wide", "Dolby Atmos", "Live Concert", "Binaural 3D", "Vintage 60s", "Modern Radio"
+  "Digital Studio", "Analog Tape", "Lo-fi Vinyl", "Stereo Wide", "Dolby Atmos", "Live Concert", "Binaural 3D", "Vintage 60s", "Modern Radio",
+  "High Fidelity (Hi-Fi)", "Lo-Fi", "Analog Warmth", "Polished", "Slick", "Raw", "Gritty", "Overdriven", "Distorted", "Vintage", "Crisp", "Bright", "Atmospheric", "Spacey", "Ethereal", "Dry", "Wet", "Spacious", "Immersive", "Cathedral Reverb", "Hall Reverb", "Intimate", "Mastered", "Bass-heavy", "Sub-bass", "Punchy", "Aggressive", "Intense", "Cinematic", "Compressed", "Dynamic Range", "Heavy Saturation", "Multi-track", "Acoustic Mix", "Electronic Production", "Vinyl Crackle", "Tape Hiss", "Balanced Mix"
 ];
 
 export default function ArrangementPanel({ 
@@ -544,7 +545,7 @@ export default function ArrangementPanel({
 
       <div className="flex flex-col gap-3">
         <label className="text-xs uppercase tracking-widest text-studio-muted font-mono flex items-center gap-2">
-          <Disc size={14} /> Recording Qualities
+          <Disc size={14} /> Recording Qualities and Mix
         </label>
         <div className="flex flex-wrap gap-2">
           {RECORDING_QUALITIES.map(r => (
