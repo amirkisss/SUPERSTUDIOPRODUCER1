@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { generateArrangement } from '../services/gemini';
-import { Music, Radio, Speaker, Loader2, Copy, Check, Mic, Disc, PenTool, Plus, Trash2, UserPlus, Waves, Globe, Layout } from 'lucide-react';
+import { Music, Radio, Speaker, Loader2, Copy, Check, Mic, Disc, PenTool, Plus, Trash2, UserPlus, Waves, Globe, Layout, Activity, Minus } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -44,6 +44,8 @@ interface ArrangementPanelProps {
   setMusicians: (m: Musician[]) => void;
   backingVocals: BackingVocal[];
   setBackingVocals: (b: BackingVocal[]) => void;
+  bpm: number;
+  setBpm: (bpm: number) => void;
   onSaveProject: () => void;
   isSaving: boolean;
 }
@@ -175,6 +177,8 @@ export default function ArrangementPanel({
   setMusicians,
   backingVocals,
   setBackingVocals,
+  bpm,
+  setBpm,
   onSaveProject,
   isSaving
 }: ArrangementPanelProps) {
@@ -222,7 +226,8 @@ export default function ArrangementPanel({
         selectedEffects,
         musicians.map(({ instrument, type, model }) => ({ instrument, type: `${type} ${model}`.trim() })),
         backingVocals.map(({ gender, style }) => ({ gender, style })),
-        selectedCountries
+        selectedCountries,
+        bpm
       );
       if (res) {
         setArrangementResult(res);
@@ -309,6 +314,30 @@ export default function ArrangementPanel({
           placeholder={t('arrangement.idea.placeholder')}
           className="bg-studio-card border border-studio-border rounded-xl p-4 focus:outline-none focus:border-studio-accent transition-colors h-24 resize-y min-h-[6rem] text-sm"
         />
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <label className="text-xs uppercase tracking-widest text-studio-muted font-mono flex items-center gap-2">
+          <Activity size={14} /> Tempo (BPM)
+        </label>
+        <div className="flex items-center gap-4 bg-studio-card border border-studio-border rounded-xl p-2 w-fit">
+          <button 
+            onClick={() => setBpm(Math.max(40, bpm - 1))}
+            className="p-2 hover:bg-studio-border rounded-lg transition-colors text-studio-muted hover:text-white"
+          >
+            <Minus size={16} />
+          </button>
+          <div className="flex flex-col items-center min-w-[60px]">
+            <span className="text-xl font-bold text-white">{bpm}</span>
+            <span className="text-[10px] text-studio-muted uppercase tracking-wider">BPM</span>
+          </div>
+          <button 
+            onClick={() => setBpm(Math.min(240, bpm + 1))}
+            className="p-2 hover:bg-studio-border rounded-lg transition-colors text-studio-muted hover:text-white"
+          >
+            <Plus size={16} />
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
