@@ -428,12 +428,25 @@ export default function App() {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-md w-full studio-glass border border-studio-border p-10 rounded-3xl shadow-2xl relative z-10 flex flex-col items-center text-center"
         >
-          <div className="bg-studio-accent p-4 rounded-2xl mb-6 shadow-lg shadow-studio-accent/20">
-            <Music className="text-black" size={48} />
+          <div className="flex flex-col items-center w-full">
+            <img 
+              src="/logo.png" 
+              alt="Super Studio Producer" 
+              className="h-32 object-contain mb-6" 
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                const fallback = document.getElementById('login-fallback-title');
+                if (fallback) fallback.style.display = 'flex';
+              }} 
+            />
+            <div id="login-fallback-title" className="hidden flex-col items-center w-full">
+              <div className="bg-studio-accent p-4 rounded-2xl mb-6 shadow-lg shadow-studio-accent/20">
+                <Music className="text-black" size={48} />
+              </div>
+              <h1 className="text-3xl font-bold mb-2 tracking-tight">{t('app.title')}</h1>
+              <p className="text-xs uppercase tracking-[0.3em] text-studio-muted font-mono mb-8">{t('app.subtitle')}</p>
+            </div>
           </div>
-          
-          <h1 className="text-3xl font-bold mb-2 tracking-tight">{t('app.title')}</h1>
-          <p className="text-xs uppercase tracking-[0.3em] text-studio-muted font-mono mb-8">{t('app.subtitle')}</p>
           
           <div className="w-full h-px bg-gradient-to-r from-transparent via-studio-border to-transparent mb-8"></div>
           
@@ -469,12 +482,26 @@ export default function App() {
           >
             <Layout size={20} />
           </button>
-          <div className="bg-studio-accent p-2 rounded-lg">
-            <Music className="text-black" size={24} />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight">{t('app.title')}</h1>
-            <p className="text-[10px] uppercase tracking-[0.2em] text-studio-muted font-mono">{t('app.subtitle')}</p>
+          <div className="flex items-center">
+            <img 
+              src="/logo.png" 
+              alt="Super Studio Producer" 
+              className="h-12 object-contain" 
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                const fallback = document.getElementById('header-fallback-title');
+                if (fallback) fallback.style.display = 'flex';
+              }} 
+            />
+            <div id="header-fallback-title" className="hidden items-center gap-3">
+              <div className="bg-studio-accent p-2 rounded-lg">
+                <Music className="text-black" size={24} />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold tracking-tight">{t('app.title')}</h1>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-studio-muted font-mono">{t('app.subtitle')}</p>
+              </div>
+            </div>
           </div>
         </div>
         
@@ -875,6 +902,8 @@ export default function App() {
                   setMusicians={setMusicians}
                   backingVocals={backingVocals}
                   setBackingVocals={setBackingVocals}
+                  onSaveProject={handleSaveProject}
+                  isSaving={isSaving}
                 />
               )}
               {activeTab === 'composition' && (
@@ -889,6 +918,8 @@ export default function App() {
                   usageLimit={userProfile?.usageLimit || 0}
                   isAdmin={userProfile?.role === 'admin'}
                   onAction={incrementUsage}
+                  onSaveProject={handleSaveProject}
+                  isSaving={isSaving}
                 />
               )}
             </motion.div>

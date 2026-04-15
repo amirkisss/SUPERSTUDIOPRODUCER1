@@ -83,6 +83,8 @@ service cloud.firestore {
                          (request.resource.data.usageCount == resource.data.usageCount + 1 && 
                           request.resource.data.usageCount <= resource.data.usageLimit))
                       );
+                      
+      allow delete: if isAdmin();
     }
 
     match /projects/{projectId} {

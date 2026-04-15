@@ -251,6 +251,8 @@ export default function LyricsEditor({
             <option>English</option>
             <option>Spanish</option>
             <option>French</option>
+            <option>Italian</option>
+            <option>Portuguese</option>
             <option>Arabic</option>
             <option>Russian</option>
             <option>Georgian</option>
@@ -313,88 +315,103 @@ export default function LyricsEditor({
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col gap-2 min-h-0">
-        <div className="flex justify-between items-center">
-          <label className="text-xs uppercase tracking-widest text-studio-muted font-mono">{t('lyrics.editor.label')}</label>
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => setIsMaximized(!isMaximized)}
-              className="bg-studio-border hover:bg-studio-accent hover:text-black p-1.5 rounded-lg transition-all flex items-center gap-2 text-[10px]"
-              title={isMaximized ? "Minimize" : "Maximize"}
-            >
-              <Layout size={12} />
-              {isMaximized ? "Minimize" : "Maximize"}
-            </button>
-            <button 
-              onClick={copyToClipboard}
-              className="bg-studio-border hover:bg-studio-accent hover:text-black p-1.5 rounded-lg transition-all flex items-center gap-2 text-[10px]"
-            >
-              {copied ? <Check size={12} /> : <Copy size={12} />}
-              {copied ? t('lyrics.copied') : t('lyrics.copy')}
-            </button>
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4 min-h-0">
+        <div className="md:col-span-3 flex flex-col gap-2 relative h-full">
+          <div className="flex justify-between items-center">
+            <label className="text-xs uppercase tracking-widest text-studio-muted font-mono">{t('lyrics.editor.label')}</label>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setIsMaximized(!isMaximized)}
+                className="bg-studio-border hover:bg-studio-accent hover:text-black p-1.5 rounded-lg transition-all flex items-center gap-2 text-[10px]"
+                title={isMaximized ? "Minimize" : "Maximize"}
+              >
+                <Layout size={12} />
+                {isMaximized ? "Minimize" : "Maximize"}
+              </button>
+              <button 
+                onClick={copyToClipboard}
+                className="bg-studio-border hover:bg-studio-accent hover:text-black p-1.5 rounded-lg transition-all flex items-center gap-2 text-[10px]"
+              >
+                {copied ? <Check size={12} /> : <Copy size={12} />}
+                {copied ? t('lyrics.copied') : t('lyrics.copy')}
+              </button>
+            </div>
           </div>
-        </div>
-        <div 
-          className={`flex-1 bg-studio-card border border-studio-border rounded-lg p-6 overflow-y-auto relative ${isMaximized ? 'fixed inset-4 z-[100] h-auto shadow-2xl ring-1 ring-studio-accent/20' : ''}`}
-          style={isMaximized ? {} : { height: `${editorHeight}px` }}
-        >
-          {isMaximized && (
-            <button 
-              onClick={() => setIsMaximized(false)}
-              className="absolute top-4 right-4 p-2 bg-studio-border hover:bg-red-500 rounded-full transition-all z-[110]"
-              title="Close"
-            >
-              <Trash2 size={20} className="rotate-45" />
-            </button>
-          )}
-          {isEditing ? (
-            <div className="h-full flex flex-col gap-4">
-              <textarea
-                value={lyrics}
-                onChange={(e) => setLyrics(e.target.value)}
-                placeholder={t('lyrics.editor.placeholder') || 'Write or paste your lyrics here...'}
-                className="w-full flex-1 bg-transparent border-none focus:outline-none resize-y min-h-[200px] leading-relaxed nikud-text text-lg"
-                dir={language === 'Hebrew' || language === 'Arabic' ? 'rtl' : 'ltr'}
-              />
-              {language === 'Hebrew' && (
-                <div className="flex justify-end border-t border-studio-border pt-4">
-                  <button
-                    onClick={handleVocalize}
-                    disabled={vocalizing || !lyrics}
-                    className="bg-studio-accent text-black font-bold px-6 py-2 rounded-xl flex items-center gap-2 hover:scale-105 transition-all shadow-lg shadow-studio-accent/20 disabled:opacity-50"
-                  >
-                    {vocalizing ? <Loader2 className="animate-spin" size={16} /> : <SpellCheck size={16} />}
-                    {vocalizing ? t('lyrics.btn.vocalizing') : t('lyrics.btn.vocalize')}
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="whitespace-pre-wrap leading-relaxed nikud-text text-lg" dir={language === 'Hebrew' || language === 'Arabic' ? 'rtl' : 'ltr'}>
-              {lyrics.split(/(\s+)/).map((part, i) => {
-                if (part.trim() === "") return part;
-                return (
-                  <span
-                    key={i}
-                    onClick={(e) => handleWordClick(e, part, i)}
-                    className={`cursor-pointer hover:bg-studio-accent hover:text-black rounded px-0.5 transition-colors ${selectedWord?.index === i ? 'bg-studio-accent text-black' : ''}`}
-                  >
-                    {part}
-                  </span>
-                );
-              })}
-            </div>
-          )}
-
-          {selectedWord && popupPosition && (
-            <div 
-              className="absolute w-64 studio-glass rounded-xl p-4 shadow-2xl z-50 animate-in fade-in zoom-in duration-200"
-              style={{ top: popupPosition.top, left: popupPosition.left }}
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-studio-accent truncate pr-2">{selectedWord.word}</h3>
-                <button onClick={() => setSelectedWord(null)} className="text-studio-muted hover:text-white">×</button>
+          <div 
+            className={`flex-1 bg-studio-card border border-studio-border rounded-lg p-6 overflow-y-auto relative ${isMaximized ? 'fixed inset-4 z-[100] h-auto shadow-2xl ring-1 ring-studio-accent/20' : ''}`}
+            style={isMaximized ? {} : { height: `${editorHeight}px` }}
+          >
+            {isMaximized && (
+              <button 
+                onClick={() => setIsMaximized(false)}
+                className="absolute top-4 right-4 p-2 bg-studio-border hover:bg-red-500 rounded-full transition-all z-[110]"
+                title="Close"
+              >
+                <Trash2 size={20} className="rotate-45" />
+              </button>
+            )}
+            {isEditing ? (
+              <div className="h-full flex flex-col gap-4">
+                <textarea
+                  autoFocus
+                  value={lyrics}
+                  onChange={(e) => setLyrics(e.target.value)}
+                  placeholder={t('lyrics.editor.placeholder') || 'Write or paste your lyrics here...'}
+                  className="w-full flex-1 bg-transparent border-none focus:outline-none resize-y min-h-[200px] leading-relaxed nikud-text text-lg"
+                  dir={language === 'Hebrew' || language === 'Arabic' ? 'rtl' : 'ltr'}
+                />
+                {language === 'Hebrew' && (
+                  <div className="flex justify-end border-t border-studio-border pt-4">
+                    <button
+                      onClick={handleVocalize}
+                      disabled={vocalizing || !lyrics}
+                      className="bg-studio-accent text-black font-bold px-6 py-2 rounded-xl flex items-center gap-2 hover:scale-105 transition-all shadow-lg shadow-studio-accent/20 disabled:opacity-50"
+                    >
+                      {vocalizing ? <Loader2 className="animate-spin" size={16} /> : <SpellCheck size={16} />}
+                      {vocalizing ? t('lyrics.btn.vocalizing') : t('lyrics.btn.vocalize')}
+                    </button>
+                  </div>
+                )}
               </div>
+            ) : (
+              <div 
+                className="whitespace-pre-wrap leading-relaxed nikud-text text-lg focus:outline-none min-h-[200px]" 
+                dir={language === 'Hebrew' || language === 'Arabic' ? 'rtl' : 'ltr'}
+                contentEditable={true}
+                suppressContentEditableWarning={true}
+                onInput={(e) => {
+                  const target = e.target as HTMLElement;
+                  // Use innerText to preserve newlines, fallback to textContent
+                  const newText = target.innerText || target.textContent || '';
+                  setLyrics(newText);
+                  setIsEditing(true);
+                }}
+              >
+                {lyrics.split(/(\s+)/).map((part, i) => {
+                  if (part.trim() === "") return part;
+                  return (
+                    <span
+                      key={i}
+                      contentEditable={false}
+                      onClick={(e) => handleWordClick(e, part, i)}
+                      className={`cursor-pointer hover:bg-studio-accent hover:text-black rounded px-0.5 transition-colors ${selectedWord?.index === i ? 'bg-studio-accent text-black' : ''}`}
+                    >
+                      {part}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+
+            {selectedWord && popupPosition && (
+              <div 
+                className="absolute w-64 studio-glass rounded-xl p-4 shadow-2xl z-50 animate-in fade-in zoom-in duration-200"
+                style={{ top: popupPosition.top, left: popupPosition.left }}
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-studio-accent truncate pr-2">{selectedWord.word}</h3>
+                  <button onClick={() => setSelectedWord(null)} className="text-studio-muted hover:text-white">×</button>
+                </div>
               
               <div className="flex flex-col gap-2">
                 <div className="flex flex-col gap-1 mb-2">
@@ -486,15 +503,109 @@ export default function LyricsEditor({
               )}
             </div>
           )}
+          {!isMaximized && (
+            <div 
+              className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize hover:bg-studio-accent transition-colors z-10 group"
+              onMouseDown={startResizing}
+            >
+              <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-studio-border group-hover:bg-studio-accent/50 transition-colors" />
+            </div>
+          )}
         </div>
-        {!isMaximized && (
-          <div 
-            className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize hover:bg-studio-accent transition-colors z-10 group"
-            onMouseDown={startResizing}
-          >
-            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-studio-border group-hover:bg-studio-accent/50 transition-colors" />
+      </div>
+      
+      <div className="md:col-span-1 flex flex-col gap-2 h-full overflow-y-auto bg-studio-card/30 border border-studio-border rounded-xl p-3">
+          <label className="text-[10px] uppercase tracking-widest text-studio-muted font-mono mb-2">Song Structure Tags</label>
+          
+          <div className="flex flex-col gap-4">
+            <div>
+              <h4 className="text-xs font-bold text-studio-accent mb-2 border-b border-studio-border pb-1">Structure</h4>
+              <div className="flex flex-col gap-1">
+                {[
+                  { tag: "[Intro]", desc: "פתיחה" },
+                  { tag: "[Verse]", desc: "בית" },
+                  { tag: "[Pre-Chorus]", desc: "מעבר" },
+                  { tag: "[Chorus]", desc: "פזמון" },
+                  { tag: "[Bridge]", desc: "גשר" },
+                  { tag: "[Outro]", desc: "סיום" },
+                  { tag: "[End]", desc: "סיום מוחלט" }
+                ].map(item => (
+                  <button 
+                    key={item.tag}
+                    onClick={() => {
+                      navigator.clipboard.writeText(item.tag);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="flex justify-between items-center p-1.5 hover:bg-studio-accent/10 rounded group text-left transition-colors"
+                    title="Click to copy tag"
+                  >
+                    <span className="text-xs font-mono font-bold text-studio-text group-hover:text-studio-accent">{item.tag}</span>
+                    <span className="text-[10px] text-studio-muted">{item.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-xs font-bold text-studio-accent mb-2 border-b border-studio-border pb-1">Music & Effects</h4>
+              <div className="flex flex-col gap-1">
+                {[
+                  { tag: "[Instrumental Break]", desc: "הפסקה לנגינה" },
+                  { tag: "[Guitar Solo]", desc: "סולו גיטרה" },
+                  { tag: "[Drop]", desc: "דרופ" },
+                  { tag: "[Breakdown]", desc: "הפחתת עוצמה" },
+                  { tag: "[Silence]", desc: "שקט" },
+                  { tag: "[Crescendo]", desc: "התחזקות" },
+                  { tag: "[Sting]", desc: "צליל חד" }
+                ].map(item => (
+                  <button 
+                    key={item.tag}
+                    onClick={() => {
+                      navigator.clipboard.writeText(item.tag);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="flex justify-between items-center p-1.5 hover:bg-studio-accent/10 rounded group text-left transition-colors"
+                    title="Click to copy tag"
+                  >
+                    <span className="text-xs font-mono font-bold text-studio-text group-hover:text-studio-accent">{item.tag}</span>
+                    <span className="text-[10px] text-studio-muted">{item.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-xs font-bold text-studio-accent mb-2 border-b border-studio-border pb-1">Vocals</h4>
+              <div className="flex flex-col gap-1">
+                {[
+                  { tag: "(Whispered)", desc: "לחישה" },
+                  { tag: "(Spoken Word)", desc: "דיבור" },
+                  { tag: "(Ad-libs)", desc: "אלתורים" },
+                  { tag: "(Echo)", desc: "הד" },
+                  { tag: "(Backing Vocals)", desc: "קולות ליווי" },
+                  { tag: "(Laughing)", desc: "צחוק" },
+                  { tag: "(Sighing)", desc: "אנחה" }
+                ].map(item => (
+                  <button 
+                    key={item.tag}
+                    onClick={() => {
+                      navigator.clipboard.writeText(item.tag);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="flex justify-between items-center p-1.5 hover:bg-studio-accent/10 rounded group text-left transition-colors"
+                    title="Click to copy tag"
+                  >
+                    <span className="text-xs font-mono font-bold text-studio-text group-hover:text-studio-accent">{item.tag}</span>
+                    <span className="text-[10px] text-studio-muted">{item.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

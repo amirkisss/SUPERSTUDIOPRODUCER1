@@ -14,6 +14,8 @@ interface CompositionPanelProps {
   usageLimit: number;
   isAdmin: boolean;
   onAction: () => void;
+  onSaveProject: () => void;
+  isSaving: boolean;
 }
 
 const MOODS = [
@@ -29,7 +31,9 @@ export default function CompositionPanel({
   usageCount,
   usageLimit,
   isAdmin,
-  onAction
+  onAction,
+  onSaveProject,
+  isSaving
 }: CompositionPanelProps) {
   const { t } = useLanguage();
   const [selectedMood, setSelectedMood] = useState('Melancholic');
@@ -120,13 +124,24 @@ export default function CompositionPanel({
         </div>
       </div>
 
-      <button
-        onClick={handleGenerate}
-        disabled={loading}
-        className="w-full bg-studio-accent hover:bg-opacity-90 text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-      >
-        {loading ? t('lyrics.btn.generating') : t('composition.btn.generate')}
-      </button>
+      <div className="flex gap-4">
+        <button
+          onClick={handleGenerate}
+          disabled={loading}
+          className="flex-1 bg-studio-accent hover:bg-opacity-90 text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-2xl"
+        >
+          {loading ? <Loader2 className="animate-spin" size={20} /> : <Guitar size={20} />}
+          {loading ? t('lyrics.btn.generating') : t('composition.btn.generate')}
+        </button>
+        <button
+          onClick={onSaveProject}
+          disabled={isSaving}
+          className="flex-1 bg-studio-border hover:bg-studio-accent hover:text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-2xl"
+        >
+          {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} />}
+          {isSaving ? t('btn.saving') || 'Saving...' : t('btn.save') || 'Save Project'}
+        </button>
+      </div>
       {error && <p className="text-xs text-red-500 text-center font-mono">{error}</p>}
 
       <div 

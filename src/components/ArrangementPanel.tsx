@@ -44,6 +44,8 @@ interface ArrangementPanelProps {
   setMusicians: (m: Musician[]) => void;
   backingVocals: BackingVocal[];
   setBackingVocals: (b: BackingVocal[]) => void;
+  onSaveProject: () => void;
+  isSaving: boolean;
 }
 
 const COUNTRIES = [
@@ -171,7 +173,9 @@ export default function ArrangementPanel({
   musicians,
   setMusicians,
   backingVocals,
-  setBackingVocals
+  setBackingVocals,
+  onSaveProject,
+  isSaving
 }: ArrangementPanelProps) {
   const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
@@ -559,13 +563,24 @@ export default function ArrangementPanel({
         </div>
       </div>
 
-      <button
-        onClick={handleGenerate}
-        disabled={loading}
-        className="w-full bg-studio-accent hover:bg-opacity-90 text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 sticky bottom-0 z-10 shadow-2xl"
-      >
-        {loading ? t('lyrics.btn.generating') : t('arrangement.btn.generate')}
-      </button>
+      <div className="flex gap-4 sticky bottom-0 z-10">
+        <button
+          onClick={handleGenerate}
+          disabled={loading}
+          className="flex-1 bg-studio-accent hover:bg-opacity-90 text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-2xl"
+        >
+          {loading ? <Loader2 className="animate-spin" size={20} /> : <Layout size={20} />}
+          {loading ? t('lyrics.btn.generating') : t('arrangement.btn.generate')}
+        </button>
+        <button
+          onClick={onSaveProject}
+          disabled={isSaving}
+          className="flex-1 bg-studio-border hover:bg-studio-accent hover:text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-2xl"
+        >
+          {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} />}
+          {isSaving ? t('btn.saving') || 'Saving...' : t('btn.save') || 'Save Project'}
+        </button>
+      </div>
       {error && <p className="text-xs text-red-500 text-center font-mono">{error}</p>}
 
       <div 
