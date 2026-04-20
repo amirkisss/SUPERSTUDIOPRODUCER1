@@ -122,7 +122,8 @@ export async function generateArrangement(
   musicians: { instrument: string, type: string }[] = [],
   backingVocals: { gender: string, style: string }[] = [],
   countryInfluences: string[] = [],
-  bpm: number = 80
+  bpm: number = 80,
+  timeSignature: string = "4/4"
 ) {
   try {
     const systemInstruction = `You are a professional music producer.
@@ -136,7 +137,7 @@ export async function generateArrangement(
     7. Backing Vocals: ${backingVocals.map(bv => `${bv.gender} ${bv.style}`).join(", ")}.
     8. Country/Cultural Influences: ${countryInfluences.join(", ")}.
     9. Recording qualities/formats: ${recording.join(", ")}.
-    10. Tempo: ${bpm} BPM.
+    10. Tempo: ${bpm} BPM, Time Signature: ${timeSignature}.
     11. How to blend the styles effectively.
     ${manualIdea ? `12. Incorporate and expand upon these specific user ideas: ${manualIdea}` : ""}
     CRITICAL: The entire response MUST BE UNDER 1000 CHARACTERS. This is a strict technical limit. Use short sentences and bullet points. Do not exceed 1000 characters under any circumstances.`;

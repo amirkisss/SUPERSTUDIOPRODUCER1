@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { generateArrangement } from '../services/gemini';
-import { Music, Radio, Speaker, Loader2, Copy, Check, Mic, Disc, PenTool, Plus, Trash2, UserPlus, Waves, Globe, Layout, Activity, Minus } from 'lucide-react';
+import { Music, Radio, Speaker, Loader2, Copy, Check, Mic, Disc, PenTool, Plus, Trash2, UserPlus, Waves, Globe, Layout, Activity, Minus, Clock } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -46,9 +46,15 @@ interface ArrangementPanelProps {
   setBackingVocals: (b: BackingVocal[]) => void;
   bpm: number;
   setBpm: (bpm: number) => void;
+  timeSignature: string;
+  setTimeSignature: (ts: string) => void;
   onSaveProject: () => void;
   isSaving: boolean;
 }
+
+const TIME_SIGNATURES = [
+  "2/4", "3/4", "4/4", "5/4", "6/8", "7/8", "9/8", "12/8", "4/2"
+];
 
 const COUNTRIES = [
   "Israel", "USA", "UK", "France", "Italy", "Spain", "Germany", "Brazil", "Argentina", "Mexico", "Jamaica", "Cuba", "Japan", "South Korea", "China", "India", "Egypt", "Morocco", "Greece", "Turkey", "Russia", "Georgia", "Armenia", "Ireland", "Scotland", "Nigeria", "South Africa", "Mali", "Senegal", "Thailand", "Vietnam", "Indonesia", "Australia", "Canada", "Sweden", "Norway", "Finland", "Iceland", "Portugal", "Netherlands", "Belgium", "Switzerland", "Austria", "Poland", "Ukraine", "Romania", "Bulgaria", "Serbia", "Croatia", "Hungary", "Czech Republic", "Slovakia", "Denmark", "Iran", "Iraq", "Lebanon", "Jordan", "Saudi Arabia", "UAE", "Pakistan", "Afghanistan", "Colombia", "Chile", "Peru", "Venezuela", "Ecuador", "Bolivia", "Paraguay", "Uruguay", "Kenya", "Ethiopia", "Ghana", "Congo", "Zimbabwe", "New Zealand", "Philippines", "Malaysia", "Singapore"
@@ -179,6 +185,8 @@ export default function ArrangementPanel({
   setBackingVocals,
   bpm,
   setBpm,
+  timeSignature,
+  setTimeSignature,
   onSaveProject,
   isSaving
 }: ArrangementPanelProps) {
@@ -227,7 +235,8 @@ export default function ArrangementPanel({
         musicians.map(({ instrument, type, model }) => ({ instrument, type: `${type} ${model}`.trim() })),
         backingVocals.map(({ gender, style }) => ({ gender, style })),
         selectedCountries,
-        bpm
+        bpm,
+        timeSignature
       );
       if (res) {
         setArrangementResult(res);
@@ -316,27 +325,44 @@ export default function ArrangementPanel({
         />
       </div>
 
-      <div className="flex flex-col gap-3">
-        <label className="text-xs uppercase tracking-widest text-studio-muted font-mono flex items-center gap-2">
-          <Activity size={14} /> Tempo (BPM)
-        </label>
-        <div className="flex items-center gap-4 bg-studio-card border border-studio-border rounded-xl p-2 w-fit">
-          <button 
-            onClick={() => setBpm(Math.max(40, bpm - 1))}
-            className="p-2 hover:bg-studio-border rounded-lg transition-colors text-studio-muted hover:text-white"
-          >
-            <Minus size={16} />
-          </button>
-          <div className="flex flex-col items-center min-w-[60px]">
-            <span className="text-xl font-bold text-white">{bpm}</span>
-            <span className="text-[10px] text-studio-muted uppercase tracking-wider">BPM</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex flex-col gap-3">
+          <label className="text-xs uppercase tracking-widest text-studio-muted font-mono flex items-center gap-2">
+            <Activity size={14} /> Tempo (BPM)
+          </label>
+          <div className="flex items-center gap-4 bg-studio-card border border-studio-border rounded-xl p-2 w-fit">
+            <button 
+              onClick={() => setBpm(Math.max(40, bpm - 1))}
+              className="p-2 hover:bg-studio-border rounded-lg transition-colors text-studio-muted hover:text-white"
+            >
+              <Minus size={16} />
+            </button>
+            <div className="flex flex-col items-center min-w-[60px]">
+              <span className="text-xl font-bold text-white">{bpm}</span>
+              <span className="text-[10px] text-studio-muted uppercase tracking-wider">BPM</span>
+            </div>
+            <button 
+              onClick={() => setBpm(Math.min(240, bpm + 1))}
+              className="p-2 hover:bg-studio-border rounded-lg transition-colors text-studio-muted hover:text-white"
+            >
+              <Plus size={16} />
+            </button>
           </div>
-          <button 
-            onClick={() => setBpm(Math.min(240, bpm + 1))}
-            className="p-2 hover:bg-studio-border rounded-lg transition-colors text-studio-muted hover:text-white"
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <label className="text-xs uppercase tracking-widest text-studio-muted font-mono flex items-center gap-2">
+            <Clock size={14} /> Time Signature (Rhythm)
+          </label>
+          <select
+            value={timeSignature}
+            onChange={(e) => setTimeSignature(e.target.value)}
+            className="bg-studio-card border border-studio-border rounded-xl p-4 focus:outline-none focus:border-studio-accent appearance-none cursor-pointer h-full"
           >
-            <Plus size={16} />
-          </button>
+            {TIME_SIGNATURES.map(ts => (
+              <option key={ts} value={ts}>{ts}</option>
+            ))}
+          </select>
         </div>
       </div>
 

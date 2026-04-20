@@ -46,6 +46,7 @@ interface Project {
   musicians?: Musician[];
   backingVocals?: BackingVocal[];
   bpm?: number;
+  timeSignature?: string;
   updatedAt: any;
 }
 
@@ -80,6 +81,7 @@ export default function App() {
   const [musicians, setMusicians] = useState<Musician[]>([]);
   const [backingVocals, setBackingVocals] = useState<BackingVocal[]>([]);
   const [bpm, setBpm] = useState<number>(80);
+  const [timeSignature, setTimeSignature] = useState<string>("4/4");
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showNewProjectConfirm, setShowNewProjectConfirm] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -198,6 +200,7 @@ export default function App() {
         musicians,
         backingVocals,
         bpm,
+        timeSignature,
         updatedAt: new Date().toISOString()
       };
 
@@ -234,6 +237,7 @@ export default function App() {
     setMusicians(project.musicians || []);
     setBackingVocals(project.backingVocals || []);
     setBpm(project.bpm || 80);
+    setTimeSignature(project.timeSignature || "4/4");
     setShowHistory(false);
     setActiveTab('lyrics');
   };
@@ -908,6 +912,8 @@ export default function App() {
                   setBackingVocals={setBackingVocals}
                   bpm={bpm}
                   setBpm={setBpm}
+                  timeSignature={timeSignature}
+                  setTimeSignature={setTimeSignature}
                   onSaveProject={handleSaveProject}
                   isSaving={isSaving}
                 />

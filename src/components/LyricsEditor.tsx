@@ -257,6 +257,10 @@ export default function LyricsEditor({
             <option>Russian</option>
             <option>Georgian</option>
             <option>Armenian</option>
+            <option>Hindi</option>
+            <option>Greek</option>
+            <option>Turkish</option>
+            <option>Yiddish</option>
             <option>Swahili</option>
             <option>Amharic</option>
             <option>Yoruba</option>
