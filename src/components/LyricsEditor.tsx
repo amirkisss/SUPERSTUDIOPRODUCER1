@@ -293,8 +293,14 @@ export default function LyricsEditor({
                   disabled={loading || refining || vocalizing || !lyrics}
                   className="w-full bg-studio-border hover:bg-studio-accent hover:text-black text-studio-text text-[10px] font-bold py-2 rounded flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                 >
-                  {vocalizing ? <Loader2 className="animate-spin" size={12} /> : <SpellCheck size={12} />}
-                  {vocalizing ? t('lyrics.btn.vocalizing') : t('lyrics.btn.vocalize')}
+                  {vocalizing ? (
+                    <Loader2 key="vocal-spinner" className="animate-spin" size={12} />
+                  ) : (
+                    <SpellCheck key="vocal-icon" size={12} />
+                  )}
+                  <span key="vocal-text">
+                    {vocalizing ? t('lyrics.btn.vocalizing') : t('lyrics.btn.vocalize')}
+                  </span>
                 </button>
               </div>
             )}
@@ -303,16 +309,28 @@ export default function LyricsEditor({
               disabled={loading || refining || vocalizing || !topic}
               className="bg-studio-accent hover:bg-opacity-90 text-black font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50"
             >
-              {loading ? <Loader2 className="animate-spin" size={20} /> : <Sparkles size={20} />}
-              {loading ? t('lyrics.btn.generating') : t('lyrics.btn.generate')}
+              {loading ? (
+                <Loader2 key="lyrics-gen-spinner" className="animate-spin" size={20} />
+              ) : (
+                <Sparkles key="lyrics-gen-icon" size={20} />
+              )}
+              <span key="lyrics-gen-text">
+                {loading ? t('lyrics.btn.generating') : t('lyrics.btn.generate')}
+              </span>
             </button>
             <button
               onClick={handleRefine}
               disabled={loading || refining || vocalizing || !lyrics}
               className="bg-studio-border hover:bg-studio-accent hover:text-black text-studio-text font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50"
             >
-              {refining ? <Loader2 className="animate-spin" size={20} /> : <Wand2 size={20} />}
-              {refining ? t('lyrics.btn.refining') : t('lyrics.btn.refine')}
+              {refining ? (
+                <Loader2 key="lyrics-refine-spinner" className="animate-spin" size={20} />
+              ) : (
+                <Wand2 key="lyrics-refine-icon" size={20} />
+              )}
+              <span key="lyrics-refine-text">
+                {refining ? t('lyrics.btn.refining') : t('lyrics.btn.refine')}
+              </span>
             </button>
           </div>
           {error && <p className="text-[10px] text-red-500 mt-2 font-mono">{error}</p>}

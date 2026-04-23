@@ -626,16 +626,26 @@ export default function ArrangementPanel({
           disabled={loading}
           className="flex-1 bg-studio-accent hover:bg-opacity-90 text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-2xl"
         >
-          {loading ? <Loader2 className="animate-spin" size={20} /> : <Layout size={20} />}
-          {loading ? t('lyrics.btn.generating') : t('arrangement.btn.generate')}
+          {loading ? (
+            <Loader2 key="gen-spinner" className="animate-spin" size={20} />
+          ) : (
+            <Layout key="gen-icon" size={20} />
+          )}
+          <span key="gen-text">{loading ? t('lyrics.btn.generating') : t('arrangement.btn.generate')}</span>
         </button>
         <button
           onClick={onSaveProject}
           disabled={isSaving}
           className="flex-1 bg-studio-border hover:bg-studio-accent hover:text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-2xl"
         >
-          {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} />}
-          {isSaving ? t('btn.saving') || 'Saving...' : t('btn.save') || 'Save Project'}
+          {isSaving ? (
+            <Loader2 key="save-spinner" className="animate-spin" size={20} />
+          ) : (
+            <Check key="save-icon" size={20} />
+          )}
+          <span key="save-text">
+            {isSaving ? t('btn.saving') || 'Saving...' : t('btn.save') || 'Save Project'}
+          </span>
         </button>
       </div>
       {error && <p className="text-xs text-red-500 text-center font-mono">{error}</p>}

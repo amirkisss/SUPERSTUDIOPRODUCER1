@@ -126,6 +126,8 @@ export default function App() {
   const [projectKey, setProjectKey] = useState(0);
   const [sidebarWidth, setSidebarWidth] = useState(256);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [headerLogoError, setHeaderLogoError] = useState(false);
+  const [loginLogoError, setLoginLogoError] = useState(false);
   const isResizingSidebar = useRef(false);
 
   const startResizingSidebar = (e: React.MouseEvent) => {
@@ -500,23 +502,22 @@ export default function App() {
           className="max-w-md w-full studio-glass border border-studio-border p-10 rounded-3xl shadow-2xl relative z-10 flex flex-col items-center text-center"
         >
           <div className="flex flex-col items-center w-full">
-            <img 
-              src="/logo.png" 
-              alt="Super Studio Producer" 
-              className="h-32 object-contain mb-6" 
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                const fallback = document.getElementById('login-fallback-title');
-                if (fallback) fallback.style.display = 'flex';
-              }} 
-            />
-            <div id="login-fallback-title" className="hidden flex-col items-center w-full">
-              <div className="bg-studio-accent p-4 rounded-2xl mb-6 shadow-lg shadow-studio-accent/20">
-                <Music className="text-black" size={48} />
+            {!loginLogoError ? (
+              <img 
+                src="/logo.png" 
+                alt="Super Studio Producer" 
+                className="h-32 object-contain mb-6" 
+                onError={() => setLoginLogoError(true)} 
+              />
+            ) : (
+              <div className="flex flex-col items-center w-full">
+                <div className="bg-studio-accent p-4 rounded-2xl mb-6 shadow-lg shadow-studio-accent/20">
+                  <Music className="text-black" size={48} />
+                </div>
+                <h1 className="text-3xl font-bold mb-2 tracking-tight">{t('app.title')}</h1>
+                <p className="text-xs uppercase tracking-[0.3em] text-studio-muted font-mono mb-8">{t('app.subtitle')}</p>
               </div>
-              <h1 className="text-3xl font-bold mb-2 tracking-tight">{t('app.title')}</h1>
-              <p className="text-xs uppercase tracking-[0.3em] text-studio-muted font-mono mb-8">{t('app.subtitle')}</p>
-            </div>
+            )}
           </div>
           
           <div className="w-full h-px bg-gradient-to-r from-transparent via-studio-border to-transparent mb-8"></div>
@@ -555,25 +556,24 @@ export default function App() {
             <Layout size={20} />
           </button>
           <div className="flex items-center">
-            <img 
-              src="/logo.png" 
-              alt="Super Studio Producer" 
-              className="h-12 object-contain" 
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                const fallback = document.getElementById('header-fallback-title');
-                if (fallback) fallback.style.display = 'flex';
-              }} 
-            />
-            <div id="header-fallback-title" className="hidden items-center gap-3">
-              <div className="bg-studio-accent p-2 rounded-lg">
-                <Music className="text-black" size={24} />
+            {!headerLogoError ? (
+              <img 
+                src="/logo.png" 
+                alt="Super Studio Producer" 
+                className="h-12 object-contain" 
+                onError={() => setHeaderLogoError(true)} 
+              />
+            ) : (
+              <div className="flex items-center gap-3">
+                <div className="bg-studio-accent p-2 rounded-lg">
+                  <Music className="text-black" size={24} />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold tracking-tight">{t('app.title')}</h1>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-studio-muted font-mono">{t('app.subtitle')}</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-xl font-bold tracking-tight">{t('app.title')}</h1>
-                <p className="text-[10px] uppercase tracking-[0.2em] text-studio-muted font-mono">{t('app.subtitle')}</p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
         
@@ -1083,9 +1083,14 @@ export default function App() {
                 <button 
                   onClick={handleSaveProject}
                   disabled={!projectTitleInput || isSaving}
-                  className="flex-1 px-6 py-3 rounded-xl bg-studio-accent hover:bg-opacity-90 text-black transition-all font-bold disabled:opacity-50"
+                  className="flex-1 px-6 py-3 rounded-xl bg-studio-accent hover:bg-opacity-90 text-black transition-all font-bold disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {isSaving ? <Loader2 className="animate-spin mx-auto" size={20} /> : t('btn.save')}
+                  {isSaving ? (
+                    <Loader2 key="save-spinner" className="animate-spin" size={20} />
+                  ) : (
+                    <Download key="save-icon" size={20} />
+                  )}
+                  <span key="save-text">{isSaving ? t('btn.saving') : t('btn.save')}</span>
                 </button>
               </div>
             </motion.div>
