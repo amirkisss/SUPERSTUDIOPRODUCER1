@@ -217,8 +217,9 @@ export default function ArrangementPanel({
   };
 
   const handleGenerate = async () => {
-    if (!isAdmin && usageCount >= usageLimit) {
-      setError("Usage limit reached. Please contact admin for more credits.");
+    // Ensure we have a valid limit before blocking. If limit is 0, it might mean the profile is still loading.
+    if (!isAdmin && usageLimit > 0 && usageCount >= usageLimit) {
+      setError(t('error.usage_limit') || "Usage limit reached. Please contact admin for more credits.");
       return;
     }
     setLoading(true);
@@ -510,9 +511,9 @@ export default function ArrangementPanel({
                   onChange={(e) => updateMusician(m.id, 'type', e.target.value)}
                   className="bg-studio-bg border border-studio-border rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-studio-accent"
                 >
-                  {MUSICIANS_DATA[m.instrument].types.map(type => (
+                  {MUSICIANS_DATA[m.instrument as keyof typeof MUSICIANS_DATA]?.types?.map(type => (
                     <option key={type} value={type}>{type}</option>
-                  ))}
+                  )) || []}
                 </select>
               </div>
               <div className="flex-1 flex flex-col gap-1">
@@ -522,9 +523,9 @@ export default function ArrangementPanel({
                   onChange={(e) => updateMusician(m.id, 'model', e.target.value)}
                   className="bg-studio-bg border border-studio-border rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-studio-accent"
                 >
-                  {MUSICIANS_DATA[m.instrument].models[m.type].map(model => (
+                  {(MUSICIANS_DATA[m.instrument as keyof typeof MUSICIANS_DATA]?.models as any)?.[m.type]?.map((model: string) => (
                     <option key={model} value={model}>{model}</option>
-                  ))}
+                  )) || []}
                 </select>
               </div>
               <button 

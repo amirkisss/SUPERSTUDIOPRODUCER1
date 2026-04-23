@@ -63,8 +63,9 @@ export default function CompositionPanel({
   };
 
   const handleGenerate = async () => {
-    if (!isAdmin && usageCount >= usageLimit) {
-      setError("Usage limit reached. Please contact admin for more credits.");
+    // Ensure we have a valid limit before blocking. If limit is 0, it might mean the profile is still loading.
+    if (!isAdmin && usageLimit > 0 && usageCount >= usageLimit) {
+      setError(t('error.usage_limit') || "Usage limit reached. Please contact admin for more credits.");
       return;
     }
     setLoading(true);
@@ -84,6 +85,7 @@ export default function CompositionPanel({
   };
 
   const copyToClipboard = () => {
+    if (!compositionResult) return;
     navigator.clipboard.writeText(compositionResult);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

@@ -1,4 +1,42 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Component, ErrorInfo, ReactNode } from 'react';
+
+// Error Boundary Component
+export class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(_: Error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Uncaught error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-studio-bg flex flex-col items-center justify-center p-4 text-center">
+          <div className="bg-studio-card border border-studio-accent/20 p-8 rounded-2xl shadow-2xl max-w-md w-full">
+            <h1 className="text-2xl font-bold text-studio-accent mb-4">Something went wrong</h1>
+            <p className="text-studio-text mb-6">The application crashed. This might be due to a temporary issue or problematic data.</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="bg-studio-accent text-black font-bold py-3 px-6 rounded-xl hover:bg-opacity-90 transition-all"
+            >
+              Reload Application
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 import { Music, PenTool, Layout, Guitar, Settings, Trash2, PlusCircle, Info, Download, FileText, FileCode, File as FileIcon, LogIn, LogOut, Users, Loader2, Shield, User as UserIcon, Plus, Minus, RotateCcw, Zap } from 'lucide-react';
 import LyricsEditor from './components/LyricsEditor';
 import ArrangementPanel from './components/ArrangementPanel';
@@ -109,6 +147,19 @@ export default function App() {
   };
 
   useEffect(() => {
+    // Test Firebase Connection initially
+    const testConnection = async () => {
+      try {
+        const { doc, getDocFromServer } = await import('firebase/firestore');
+        await getDocFromServer(doc(db, 'test', 'connection'));
+      } catch (error: any) {
+        if (error?.message?.includes('the client is offline')) {
+          console.error("Firebase is offline. Check configuration.");
+        }
+      }
+    };
+    testConnection();
+
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
       if (!u) {
@@ -271,9 +322,11 @@ export default function App() {
     if (userProfile.role === 'admin') return; // Admin has no limit
     
     try {
+      const currentCount = userProfile.usageCount || 0;
       await updateDoc(doc(db, 'users', user.uid), {
-        usageCount: (userProfile.usageCount || 0) + 1
+        usageCount: currentCount + 1
       });
+      // Optionally update local state too if needed, but onSnapshot should handle it
     } catch (error) {
       console.error("Error incrementing usage:", error);
     }
@@ -479,7 +532,8 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-studio-bg text-studio-text flex flex-col">
+    <ErrorBoundary>
+      <div className="min-h-screen bg-studio-bg text-studio-text flex flex-col">
       {/* Header */}
       <header className="border-bottom border-studio-border px-6 py-4 flex items-center justify-between studio-glass sticky top-0 z-50">
         <div className="flex items-center gap-3">
@@ -1040,5 +1094,6 @@ export default function App() {
         </div>
       </footer>
     </div>
+    </ErrorBoundary>
   );
 }
