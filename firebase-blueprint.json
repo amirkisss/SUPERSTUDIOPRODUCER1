@@ -32,6 +32,16 @@
         "compositionResult": { "type": "string" },
         "arrangementIdea": { "type": "string" },
         "compositionIdea": { "type": "string" },
+        "selectedGenres": { "type": "array", "items": { "type": "string" } },
+        "selectedInstruments": { "type": "array", "items": { "type": "string" } },
+        "selectedVocals": { "type": "array", "items": { "type": "string" } },
+        "selectedEffects": { "type": "array", "items": { "type": "string" } },
+        "selectedRecordings": { "type": "array", "items": { "type": "string" } },
+        "selectedCountries": { "type": "array", "items": { "type": "string" } },
+        "musicians": { "type": "array" },
+        "backingVocals": { "type": "array" },
+        "bpm": { "type": "number" },
+        "timeSignature": { "type": "string" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "updatedAt"]

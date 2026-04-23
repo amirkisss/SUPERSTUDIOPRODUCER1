@@ -211,12 +211,19 @@ export default function App() {
     }
     const q = query(
       collection(db, 'projects'), 
-      where('userId', '==', user.uid),
-      orderBy('updatedAt', 'desc')
+      where('userId', '==', user.uid)
     );
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const projs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+      // Sort manually to avoid composite index requirement
+      projs.sort((a, b) => {
+        const dateA = new Date(a.updatedAt).getTime();
+        const dateB = new Date(b.updatedAt).getTime();
+        return dateB - dateA;
+      });
       setProjects(projs);
+    }, (error) => {
+      console.error("Error fetching projects:", error);
     });
     return () => unsubscribe();
   }, [user]);
@@ -242,16 +249,16 @@ export default function App() {
         compositionResult,
         arrangementIdea,
         compositionIdea,
-        selectedGenres,
-        selectedInstruments,
-        selectedVocals,
-        selectedEffects,
-        selectedRecordings,
-        selectedCountries,
-        musicians,
-        backingVocals,
-        bpm,
-        timeSignature,
+        selectedGenres: selectedGenres || [],
+        selectedInstruments: selectedInstruments || [],
+        selectedVocals: selectedVocals || [],
+        selectedEffects: selectedEffects || [],
+        selectedRecordings: selectedRecordings || [],
+        selectedCountries: selectedCountries || [],
+        musicians: musicians || [],
+        backingVocals: backingVocals || [],
+        bpm: bpm || 80,
+        timeSignature: timeSignature || "4/4",
         updatedAt: new Date().toISOString()
       };
 
@@ -262,14 +269,17 @@ export default function App() {
         setCurrentProjectId(docRef.id);
       }
       setShowSaveModal(false);
+      // Optional: Add a small toast or visual feedback here
     } catch (error) {
       console.error("Error saving project:", error);
+      alert("Failed to save project. Please check your connection or console for details.");
     } finally {
       setIsSaving(false);
     }
   };
 
   const loadProject = (project: Project) => {
+    setProjectKey(prev => prev + 1); // Ensure full component remount
     setCurrentProjectId(project.id);
     setProjectTitleInput(project.title);
     setLyrics(project.lyrics || '');

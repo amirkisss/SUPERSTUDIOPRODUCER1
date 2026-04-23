@@ -53,9 +53,24 @@ service cloud.firestore {
       return data.keys().hasAll(['userId', 'updatedAt']) &&
              data.userId == request.auth.uid &&
              data.updatedAt is string &&
-             (!('title' in data) || (data.title is string && data.title.size() < 200)) &&
-             (!('lyrics' in data) || (data.lyrics is string && data.lyrics.size() < 50000)) &&
-             (!('arrangementResult' in data) || (data.arrangementResult is string && data.arrangementResult.size() < 10000));
+             (!('title' in data) || (data.title is string && data.title.size() < 500)) &&
+             (!('lyrics' in data) || (data.lyrics is string && data.lyrics.size() < 100000)) &&
+             (!('arrangementResult' in data) || (data.arrangementResult is string && data.arrangementResult.size() < 100000)) &&
+             (!('compositionResult' in data) || (data.compositionResult is string && data.compositionResult.size() < 100000)) &&
+             (!('topic' in data) || (data.topic is string && data.topic.size() < 1000)) &&
+             (!('language' in data) || (data.language is string && data.language.size() < 100)) &&
+             (!('arrangementIdea' in data) || (data.arrangementIdea is string && data.arrangementIdea.size() < 5000)) &&
+             (!('compositionIdea' in data) || (data.compositionIdea is string && data.compositionIdea.size() < 5000)) &&
+             (!('bpm' in data) || (data.bpm is number)) &&
+             (!('timeSignature' in data) || (data.timeSignature is string && data.timeSignature.size() < 20)) &&
+             (!('selectedGenres' in data) || (data.selectedGenres is list)) &&
+             (!('selectedInstruments' in data) || (data.selectedInstruments is list)) &&
+             (!('selectedVocals' in data) || (data.selectedVocals is list)) &&
+             (!('selectedEffects' in data) || (data.selectedEffects is list)) &&
+             (!('selectedRecordings' in data) || (data.selectedRecordings is list)) &&
+             (!('selectedCountries' in data) || (data.selectedCountries is list)) &&
+             (!('musicians' in data) || (data.musicians is list)) &&
+             (!('backingVocals' in data) || (data.backingVocals is list));
     }
 
     match /users/{userId} {
